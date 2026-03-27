@@ -37,10 +37,7 @@ const state: SessionState = {
   updatedAt: "",
 };
 
-const isVercel = Boolean(process.env.VERCEL) || Boolean(process.env.VERCEL_ENV);
-const RUNTIME_ROOT = isVercel 
-  ? path.join("/tmp", "hackaton-runtime")
-  : path.join(process.cwd(), "data", "runtime");
+const RUNTIME_ROOT = path.join(process.cwd(), "data", "runtime");
 const DATASETS_DIR = path.join(RUNTIME_ROOT, "datasets");
 const MANIFEST_PATH = path.join(DATASETS_DIR, "manifest.json");
 const LEGACY_SESSION_STORE_PATH = path.join(RUNTIME_ROOT, "session-store.json");

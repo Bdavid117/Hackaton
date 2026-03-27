@@ -127,14 +127,7 @@ export async function answerWithAI(
     "5) Prioriza recomendaciones accionables para equipos.",
     buildDatasetContextSnippet(context, sessions),
     `Herramientas utilizadas: ${toolResult.toolNames.join(", ")}`,
-    `Resultado de herramientas (JSON): ${buildToolPayloadSnippet(toolResult.payloadByTool)}`
-  ].join("\n");
-
-  const bodyData = {
-    model: "claude-3-haiku-20240307",
-    max_tokens: env.aiMaxTokens,
-    temperature: 0.2, // Reducida para mas predictibilidad analitica
-    system: prompt,
+    `Resultado de herramientas (JSON): ${buildToolPayloadSnippet(toolResult.payloadByTool)}`,
     messages: [
       { role: "user", "content": safeQuestion }
     ]

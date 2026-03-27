@@ -21,10 +21,7 @@ type AuditQuery = {
   actorContains?: string;
 };
 
-const isVercel = Boolean(process.env.VERCEL) || Boolean(process.env.VERCEL_ENV);
-const AUDIT_FILE_PATH = isVercel
-  ? path.join("/tmp", "hackaton-runtime", "audit", "events.jsonl")
-  : path.join(process.cwd(), "data", "runtime", "audit", "events.jsonl");
+const AUDIT_FILE_PATH = path.join(process.cwd(), "data", "runtime", "audit", "events.jsonl");
 
 export async function logAuditEvent(
   action: AuditAction,

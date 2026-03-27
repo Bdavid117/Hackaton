@@ -1,203 +1,105 @@
-# Marketing Copilot
+# Data & Growth Copilot
 
-Convierte datos crudos de comportamiento web en decisiones de marketing accionables en minutos.
+Convierte datos crudos de comportamiento web en decisiones de marketing y growth accionables en minutos, potenciado por IA.
 
-Marketing Copilot combina analitica operativa con IA para responder preguntas de negocio como:
+Data & Growth Copilot combina analitica operativa con capacidades de lenguaje natural para responder preguntas complejas de negocio como:
 
-- Donde estamos perdiendo conversion.
-- Que paginas retienen mejor el trafico calificado.
-- Que acciones priorizar esta semana para mejorar resultados.
+- ¿Dónde estamos perdiendo conversión?
+- ¿Qué subconjunto de páginas retienen mejor el tráfico calificado?
+- ¿Qué acciones debe priorizar el equipo esta semana para levantar resultados?
 
 ## Propuesta de valor
 
-- Velocidad: pasas de CSV a insights ejecutivos sin hojas de calculo manuales.
-- Claridad: te muestra datos, interpretacion y accion sugerida en un mismo flujo.
-- Continuidad operativa: aunque Gemini tenga timeout o cuota, el sistema responde con analisis local.
-- Gobierno de datos: versionado de datasets para comparar cargas y mantener historial reciente.
+- **Velocidad:** pasas de CSV a insights ejecutivos sin usar hojas de cálculo complejas.
+- **Claridad Visual:** visualizaciones interactivas impulsadas por Plotly y respuestas del chat renderizadas en markdown limpio tipo burbuja.
+- **Continuidad operativa & Anti-fragilidad:** aunque la API de Anthropic tenga timeout, agote cuota o falle, el sistema responde con un completo análisis local sin bloquear al usuario.
+- **Gobierno de datos:** versionado de datasets para comparar cargas y mantener el contexto del negocio intacto durante el análisis.
+- **Seguridad:** protección de \
+Prompt
+Injection\ incorporada en la raíz del backend para evitar suplantaciones de roles o tareas no orientadas a datos.
 
-## Para quien es este producto
+## Para quién es este producto
 
 - Equipos de Growth y Performance Marketing.
-- Product Managers que optimizan funnels digitales.
-- Equipos de CRO y analitica digital.
-- Lideres de negocio que necesitan una lectura ejecutiva, no solo tablas.
+- Product Managers que optimizan funnels digitales B2B / B2C.
+- Equipos de CRO (Conversion Rate Optimization) y analítica digital.
+- Líderes de negocio que necesitan una lectura ejecutiva (Insights), no sólo tablas.       
 
-## Como interactua el usuario con el programa
+## Arquitectura y Flujos
 
-### 1. Inicio simple, sin friccion
+### AI y UI
+- Integración de **Anthropic Claude 3** para inferencia compleja.
+- Gráficas responsivas e interactivas utilizando **Plotly.js**.
+- UI del chat conversacional inspirada en aplicaciones de mensajería (burbujas, markdown a través de \marked.js\).
 
-Al abrir la app, el usuario ve solo dos acciones principales:
+### Motores Internos
+1. **Motor de Ingestión:** Upload de CSV, normalización y versionado en el Session Store.
+2. **Motor de Métricas:** Cálculo de Top Pages, Exit Rate, Flujos de página a página, Engagement e Intención de Conversión.
+3. **Capa de Decision Intelligence:** El usuario pregunta -> El backend selecciona un tool (ej. obtener base de datos) -> El Contexto se empaqueta junto a reglas estrictas -> Claude devuelve la acción orientada a rentabilidad.
 
-- Cargar archivo CSV.
-- Preguntar al chat.
+### Protecciones de IA
+- *Fallback Local Automático:* Si falta saldo en la cuenta de Claude (error 400) o hay exceso de peticiones, el sistema de fallback local formatea los hallazgos duros y simula una experiencia enriquecida de todas formas.
+- *Filtros de Contexto:* En la capa del sistema (\ngine.ts\), existe directriz absoluta que detiene cualquier query fuera de analítica de sitios o negocios.
 
-No se muestra un dataset por defecto. Esto evita tomar decisiones con datos antiguos por error.
+---
 
-### 2. Carga y procesamiento
+## 🚀 Despliegue en GitHub Pages
 
-El usuario sube su CSV de eventos y el sistema:
+Este repositorio está configurado y altamente optimizado para desplegarse mediante GitHub Actions hacia GitHub Pages. 
 
-- Valida formato y tamano.
-- Crea una nueva version de dataset.
-- Activa el dataset para el analisis actual.
+### ¡Atención sobre el Entorno SSR!
+La aplicación actual ha sido construida con una arquitectura \Astro SSR (Server-Side Rendering)\ usando \@astrojs/node\ dado a que la aplicación necesita un runtime de Node.js permanente para:
+1. Parsear, procesar y almacenar archivos CSV (\/api/upload\).
+2. Conectarse de forma encriptada y segura a la API de Anthropic a través de \/api/chat\.
+3. Consultar métricas dinámicas (\/api/metrics\).
 
-Cuando termina, se habilita automaticamente el workspace de datos procesados.
+> **Nota importante sobre GitHub Pages:** Dado que GitHub pages es un hosting de archivos exclusivamente estáticos (SSG), los endpoints \/api\ (Astro SSR) **no funcionarán inherentemente en el live de páginas de GitHub.** 
+> 
+> *Solución corporativa recomendada:* Si se busca mostrar el panel al público, recomendamos hospedar la API backend en **Vercel, Render o Railway** y configurar en modo \static\ el front-end de Astro, o derechamente hacer deploy del bloque a una plataforma Full-stack (ej: Netlify o Vercel donde Node ejecuta Edge Functions automáticamente). 
 
-### 3. Exploracion en workspace analitico
+---
 
-El usuario navega tres vistas principales:
+## Instalación y Ejecución local de manera completa
 
-- Resumen: lectura ejecutiva de estado general.
-- Insights: hallazgos con foco en oportunidad y riesgo.
-- Tablas: detalle para analistas y validacion de hallazgos.
-
-### 4. Conversacion con copiloto
-
-El chat permite preguntas abiertas de negocio y devuelve respuestas estructuradas con:
-
-- Dato clave.
-- Interpretacion del comportamiento.
-- Accion recomendada.
-
-Ejemplos de preguntas:
-
-- Que paginas tienen mas trafico pero peor salida?
-- Donde enfoco presupuesto para aumentar conversion?
-- Que friccion se observa en el recorrido antes de pricing o demo?
-
-## Flujos funcionales internos
-
-### Flujo A: Ingestion y versionado
-
-1. Upload de CSV.
-2. Parseo y normalizacion de datos.
-3. Persistencia en version nueva.
-4. Actualizacion de manifiesto de datasets.
-5. Activacion del dataset para metricas y chat.
-
-Resultado: trazabilidad y control de cambios en cada carga.
-
-### Flujo B: Motor de metricas
-
-1. Lectura del dataset activo.
-2. Calculo de KPIs y agregaciones.
-3. Identificacion de patrones e insights.
-4. Entrega en endpoints para dashboard y chat.
-
-Resultado: visibilidad de comportamiento y puntos de palanca para decisiones.
-
-### Flujo C: Decision Intelligence con IA
-
-1. El usuario pregunta en lenguaje natural.
-2. El sistema selecciona herramientas analiticas segun la pregunta.
-3. Se construye contexto con dataset activo y metricas relevantes.
-4. Gemini genera respuesta orientada a accion.
-5. Si Gemini falla, se aplica fallback local para no interrumpir el analisis.
-
-Resultado: continuidad de consulta aun con incidencias del proveedor.
-
-## Que datos y metricas muestra para tomar decisiones
-
-### KPIs operativos principales
-
-- Top Pages: identifica donde se concentra el trafico.
-- Exit Rate: detecta paginas con abandono alto.
-- Flujos frecuentes: muestra rutas reales de navegacion.
-- Interaccion promedio: evalua profundidad de engagement.
-- Conversion Intent: aproxima intencion de conversion.
-
-### Insights de negocio
-
-- Paginas fantasma: trafico sin progresion clara.
-- Sesiones de alta intencion: comportamiento cercano a conversion.
-- Caida de embudo: puntos del recorrido donde se rompe el avance.
-
-### Como convertir metricas en decisiones
-
-- Top Pages alto + Exit alto: optimizar mensaje, CTA y performance en esas paginas.
-- Flujo frecuente con corte temprano: redisenar secuencia o reducir friccion del paso intermedio.
-- Conversion Intent bajo en trafico calificado: ajustar oferta, formulario o prueba social.
-- Paginas fantasma recurrentes: simplificar arquitectura de contenido y enlaces internos.
-
-## Mapa rapido de decision para equipos de marketing
-
-- Si buscas volumen: prioriza paginas top con mejor retencion.
-- Si buscas eficiencia: ataca primero las paginas con mayor salida y trafico.
-- Si buscas conversion: enfoca experimentos en pasos previos a pricing, demo o checkout.
-- Si buscas rentabilidad: cruza hallazgos del chat con costo por canal y tasa de avance.
-
-## Estado de salud IA y continuidad
-
-El endpoint de salud informa si Gemini esta listo y diferencia entre:
-
-- Error de autenticacion o permisos.
-- Timeout del proveedor.
-- Cuota o rate limit excedido.
-- Proveedor no alcanzable.
-
-Incluso en estados no listos, el producto mantiene respuestas de fallback para no detener la operacion.
-
-## Arquitectura tecnica resumida
-
-- Frontend Astro con dashboard modular en public/js/dashboard.
-- API routes en src/pages/api para upload, metricas, chat y health.
-- Capa IA en src/lib/ai con orquestacion de tools y respuesta estructurada.
-- Capa de datos en src/lib/data para parseo, metricas e insights.
-- Store en src/lib/store/sessionStore para versionado y dataset activo.
-
-## Instalacion y puesta en marcha
+Para levantar el producto 100% operativo con su propio procesador de datos:
 
 ### Requisitos
-
 - Node.js 22+
 - npm
 
-### Configuracion
+### Configuración
 
 1. Instala dependencias:
-
-```bash
+\\\ash
 npm install
-```
+\\\
 
 2. Configura variables en archivo .env:
-
-```env
-GEMINI_API_KEY=AIza...
+Copia \.env.example\ o crea \.env\ con:
+\\\nv
+ANTHROPIC_API_KEY=sk-ant-api03-xxxx...
 MAX_UPLOAD_BYTES=31457280
 CHAT_RATE_LIMIT_MAX=20
 CHAT_RATE_LIMIT_WINDOW_MS=60000
-GEMINI_TIMEOUT_MS=20000
-GEMINI_MAX_RETRIES=2
+AI_TIMEOUT_MS=20000
 MAX_DATASET_VERSIONS=10
-```
+\\\
 
 3. Ejecuta en desarrollo:
-
-```bash
+\\\ash
 npm run dev
-```
+\\\
 
-### Comandos utiles
+4. Genera data de prueba si no tienes (en \/public\):
+\\\ash
+npm run generate:sample
+\\\
 
-- npm run dev
-- npm run build
-- npm run preview
-- npm run generate:sample
+## Estado de salud IA y métricas internas
 
-## FAQ para operacion comercial
+El endpoint local interno detecta fallas y diferencia entre:
+- Error de autenticación.
+- Timeout del proveedor (Anthropic).
+- Falta de fondos en la cuenta / Rate Limit excedido.
 
-### Cambie API key y veo sin cuota
-
-Si la app indica provider_quota_exceeded con key configurada y formato valido, la lectura de clave funciona. El limite proviene de la cuenta o proyecto asociado a esa clave en Google AI.
-
-### El workspace de datos procesados no aparece
-
-Se habilita cuando hay una carga CSV valida y activa. Si no hay dataset activo, la app evita mostrar analitica para no inducir decisiones con datos inexistentes.
-
-## Roadmap recomendado
-
-- Segmentacion por canal de adquisicion y cohortes.
-- Priorizacion automatica de backlog de experimentos.
-- Integracion con BI y fuentes en tiempo real.
-- Alertas proactivas sobre caidas de conversion.
+**¿Problemas de 400 bad request en el chat local?** Revisa si la clave Anthropic tiene fondos pre-cargados (Credits). El sistema mostrará un informe enriquecido *offline* en lugar de botar la app en caso de que falten fondos.
