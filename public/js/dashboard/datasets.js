@@ -102,6 +102,41 @@ export function bindDatasetActions(ctx) {
     }, dom.appMain);
   });
 
+  dom.demoBtn.addEventListener("click", async () => {
+    await withButtonLoading(dom.demoBtn, "Cargando Demo...", async () => {
+      ctx.setStatus(dom.uploadStatus, "Descargando dataset de demostración...");
+      try {
+        const response = await fetch("/demo_datasets/1_Data_Recordings_Demo.csv");
+        if (!response.ok) throw new Error("No se pudo obtener el dataset de demo");
+        const blob = await response.blob();
+        const file = new File([blob], "1_Data_Recordings_Demo.csv", { type: "text/csv" });
+        
+        ctx.setStatus(dom.uploadStatus, "Procesando demo...");
+        const formData = new FormData();
+        formData.append("file", file);
+        
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await uploadRes.json();
+        if (!uploadRes.ok) {
+          ctx.setStatus(dom.uploadStatus, data.error || "Error cargando demo.", true);
+          return;
+        }
+
+        ctx.state.sessionUploadCompleted = true;
+        ctx.showAdvancedDatasetControls?.();
+        ctx.setStatus(dom.uploadStatus, "Demo activado: " + data.fileName + " (" + data.sessions + " sesiones)");
+        await ctx.syncDatasets();
+        await ctx.refreshMetrics();
+      } catch (err) {
+        ctx.setStatus(dom.uploadStatus, "Error en Demo: " + err.message, true);
+      }
+    }, dom.appMain);
+  });
+
   dom.refreshBtn.addEventListener("click", async () => {
     await withButtonLoading(dom.refreshBtn, "Actualizando...", async () => {
       await ctx.syncDatasets();
