@@ -1,0 +1,21 @@
+{
+  "name": "marketing-copilot-astro",
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "generate:sample": "node scripts/generate_sample_data.js"
+  },
+  "dependencies": {
+    "@astrojs/node": "^10.0.4",
+    "@google/genai": "^1.46.0",
+    "astro": "^6.1.1",
+    "papaparse": "^5.5.3"
+  }
+}

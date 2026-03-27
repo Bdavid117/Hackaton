@@ -1,0 +1,435 @@
+---
+---
+
+<html lang="es">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Marketing Copilot - Astro + Gemini</title>
+		<style>
+			:root {
+				--bg: #f4f6fb;
+				--panel: #ffffff;
+				--text: #13243a;
+				--muted: #5f6b7a;
+				--primary: #1d4ed8;
+				--primary-soft: #dbeafe;
+				--danger: #be123c;
+				--border: #dce3ef;
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			body {
+				margin: 0;
+				font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+				background: radial-gradient(circle at 20% 0%, #e8f0ff 0, #f4f6fb 45%, #edf1fa 100%);
+				color: var(--text);
+			}
+
+			main {
+				max-width: 1200px;
+				margin: 0 auto;
+				padding: 1rem;
+				display: grid;
+				gap: 1rem;
+			}
+
+			.hero {
+				background: var(--panel);
+				border: 1px solid var(--border);
+				border-radius: 16px;
+				padding: 1rem;
+			}
+
+			h1 {
+				margin: 0;
+				font-size: 1.6rem;
+			}
+
+			.subtitle {
+				margin: 0.5rem 0 0;
+				color: var(--muted);
+			}
+
+			.grid {
+				display: grid;
+				gap: 1rem;
+				grid-template-columns: 1fr;
+			}
+
+			.panel {
+				background: var(--panel);
+				border: 1px solid var(--border);
+				border-radius: 16px;
+				padding: 1rem;
+			}
+
+			.kpis {
+				display: grid;
+				gap: 0.75rem;
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+			}
+
+			.kpi {
+				border: 1px solid var(--border);
+				border-radius: 12px;
+				padding: 0.75rem;
+			}
+
+			.kpi .label {
+				color: var(--muted);
+				font-size: 0.8rem;
+			}
+
+			.kpi .value {
+				font-size: 1.25rem;
+				font-weight: 700;
+				margin-top: 0.3rem;
+			}
+
+			input[type="file"],
+			input[type="text"],
+			button {
+				font: inherit;
+			}
+
+			button {
+				border: 0;
+				border-radius: 10px;
+				padding: 0.65rem 0.9rem;
+				background: var(--primary);
+				color: white;
+				cursor: pointer;
+			}
+
+			button.secondary {
+				background: var(--primary-soft);
+				color: var(--primary);
+			}
+
+			.row {
+				display: flex;
+				gap: 0.5rem;
+				flex-wrap: wrap;
+				align-items: center;
+			}
+
+			.status {
+				color: var(--muted);
+				font-size: 0.9rem;
+			}
+
+			.error {
+				color: var(--danger);
+			}
+
+			.tables {
+				display: grid;
+				gap: 1rem;
+				grid-template-columns: 1fr;
+			}
+
+			table {
+				width: 100%;
+				border-collapse: collapse;
+				font-size: 0.9rem;
+			}
+
+			th,
+			td {
+				padding: 0.5rem;
+				border-bottom: 1px solid var(--border);
+				text-align: left;
+			}
+
+			.chat-box {
+				max-height: 320px;
+				overflow: auto;
+				border: 1px solid var(--border);
+				border-radius: 12px;
+				padding: 0.75rem;
+				background: #fbfdff;
+			}
+
+			.msg {
+				margin: 0.5rem 0;
+				padding: 0.6rem 0.7rem;
+				border-radius: 10px;
+				line-height: 1.45;
+			}
+
+			.msg.user {
+				background: #e3edff;
+			}
+
+			.msg.bot {
+				background: #eef8ff;
+			}
+
+			@media (min-width: 900px) {
+				.grid {
+					grid-template-columns: 1fr 1fr;
+				}
+
+				.tables {
+					grid-template-columns: 1fr 1fr;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<main>
+			<section class="hero">
+				<h1>Marketing Copilot (Astro + Gemini)</h1>
+				<p class="subtitle">
+					Carga un CSV de Clarity, calcula metricas y consulta insights en lenguaje natural.
+				</p>
+			</section>
+
+			<section class="panel">
+				<h2>1) Cargar CSV</h2>
+				<div class="row">
+					<input id="csvFile" type="file" accept=".csv" />
+					<button id="uploadBtn">Cargar y Procesar</button>
+					<button id="refreshBtn" class="secondary">Actualizar Dashboard</button>
+				</div>
+				<p id="uploadStatus" class="status">Esperando archivo CSV...</p>
+			</section>
+
+			<section class="panel">
+				<h2>2) KPIs</h2>
+				<div class="kpis">
+					<article class="kpi">
+						<div class="label">Sesiones Totales</div>
+						<div class="value" id="kpiSessions">-</div>
+					</article>
+					<article class="kpi">
+						<div class="label">Duracion Promedio (seg)</div>
+						<div class="value" id="kpiDuration">-</div>
+					</article>
+					<article class="kpi">
+						<div class="label">Abandono Rapido (%)</div>
+						<div class="value" id="kpiQuickExit">-</div>
+					</article>
+				</div>
+			</section>
+
+			<section class="grid">
+				<article class="panel">
+					<h2>3) Co-piloto con Gemini</h2>
+					<div class="chat-box" id="chatBox"></div>
+					<div class="row" style="margin-top: 0.8rem;">
+						<input
+							id="chatInput"
+							type="text"
+							placeholder="Ejemplo: En que paginas abandonan mas los usuarios?"
+							style="flex: 1; min-width: 260px; padding: 0.65rem; border: 1px solid var(--border); border-radius: 10px;"
+						/>
+						<button id="chatBtn">Preguntar</button>
+					</div>
+					<p id="chatStatus" class="status"></p>
+				</article>
+
+				<article class="panel">
+					<h2>4) Insights adicionales</h2>
+					<div id="insights"></div>
+				</article>
+			</section>
+
+			<section class="tables">
+				<article class="panel">
+					<h2>Top Pages</h2>
+					<table id="topPagesTable">
+						<thead>
+							<tr>
+								<th>Pagina</th>
+								<th>Sesiones</th>
+								<th>%</th>
+							</tr>
+						</thead>
+						<tbody></tbody>
+					</table>
+				</article>
+
+				<article class="panel">
+					<h2>Exit Rate</h2>
+					<table id="exitRateTable">
+						<thead>
+							<tr>
+								<th>Pagina</th>
+								<th>Exits</th>
+								<th>Tasa (%)</th>
+							</tr>
+						</thead>
+						<tbody></tbody>
+					</table>
+				</article>
+			</section>
+
+			<section class="panel">
+				<h2>Flujos mas frecuentes</h2>
+				<table id="flowsTable">
+					<thead>
+						<tr>
+							<th>Desde</th>
+							<th>Hacia</th>
+							<th>Conteo</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
+			</section>
+		</main>
+
+		<script>
+			const uploadBtn = document.getElementById("uploadBtn");
+			const refreshBtn = document.getElementById("refreshBtn");
+			const csvFile = document.getElementById("csvFile");
+			const uploadStatus = document.getElementById("uploadStatus");
+
+			const chatBtn = document.getElementById("chatBtn");
+			const chatInput = document.getElementById("chatInput");
+			const chatBox = document.getElementById("chatBox");
+			const chatStatus = document.getElementById("chatStatus");
+
+			function setStatus(el, text, isError = false) {
+				el.textContent = text;
+				el.classList.toggle("error", isError);
+			}
+
+			function addMessage(type, text) {
+				const div = document.createElement("div");
+				div.className = `msg ${type}`;
+				div.textContent = text;
+				chatBox.appendChild(div);
+				chatBox.scrollTop = chatBox.scrollHeight;
+			}
+
+			function fillTable(id, rows, columns) {
+				const table = document.querySelector(`#${id} tbody`);
+				table.innerHTML = "";
+
+				if (!rows || rows.length === 0) {
+					const tr = document.createElement("tr");
+					const td = document.createElement("td");
+					td.colSpan = columns.length;
+					td.textContent = "Sin datos";
+					tr.appendChild(td);
+					table.appendChild(tr);
+					return;
+				}
+
+				rows.forEach((row) => {
+					const tr = document.createElement("tr");
+					columns.forEach((key) => {
+						const td = document.createElement("td");
+						td.textContent = row[key] ?? "-";
+						tr.appendChild(td);
+					});
+					table.appendChild(tr);
+				});
+			}
+
+			function renderInsights(data) {
+				const root = document.getElementById("insights");
+				const ghost = data?.insights?.ghostPages?.[0];
+				const highIntent = data?.insights?.highIntent;
+				const funnel = data?.insights?.funnelDrop;
+
+				root.innerHTML = `
+					<p><strong>Pagina fantasma principal:</strong> ${ghost ? `${ghost.page} (${ghost.lowEngagementPct}%)` : "-"}</p>
+					<p><strong>Sesiones de alta intencion:</strong> ${highIntent ? `${highIntent.highIntentSessions} (${highIntent.highIntentPct}%)` : "-"}</p>
+					<p><strong>Caida Awareness -> Evaluation:</strong> ${funnel ? `${funnel.dropAwarenessToEvaluationPct}%` : "-"}</p>
+					<p><strong>Caida Evaluation -> Conversion:</strong> ${funnel ? `${funnel.dropEvaluationToConversionPct}%` : "-"}</p>
+				`;
+			}
+
+			function renderMetrics(data) {
+				document.getElementById("kpiSessions").textContent = data?.kpis?.totalSessions ?? "-";
+				document.getElementById("kpiDuration").textContent = data?.kpis?.avgDurationSec ?? "-";
+				document.getElementById("kpiQuickExit").textContent = data?.kpis?.quickExitPct ?? "-";
+
+				fillTable("topPagesTable", data?.topPages ?? [], ["page", "uniqueSessions", "pctSessions"]);
+				fillTable("exitRateTable", data?.exitRate ?? [], ["page", "exits", "exitRatePct"]);
+				fillTable("flowsTable", data?.commonFlows ?? [], ["from", "to", "count"]);
+				renderInsights(data);
+			}
+
+			async function refreshMetrics() {
+				const res = await fetch("/api/metrics");
+				const data = await res.json();
+
+				if (!res.ok) {
+					setStatus(uploadStatus, data.error || "No fue posible cargar metricas.", true);
+					return;
+				}
+
+				setStatus(
+					uploadStatus,
+					`Dataset: ${data.sourceName} | Actualizado: ${new Date(data.updatedAt).toLocaleTimeString()}`
+				);
+				renderMetrics(data);
+			}
+
+			uploadBtn.addEventListener("click", async () => {
+				const file = csvFile.files?.[0];
+				if (!file) {
+					setStatus(uploadStatus, "Selecciona un CSV antes de cargar.", true);
+					return;
+				}
+
+				setStatus(uploadStatus, "Procesando archivo...");
+				const formData = new FormData();
+				formData.append("file", file);
+
+				const res = await fetch("/api/upload", {
+					method: "POST",
+					body: formData,
+				});
+
+				const data = await res.json();
+				if (!res.ok) {
+					setStatus(uploadStatus, data.error || "Error cargando archivo.", true);
+					return;
+				}
+
+				setStatus(uploadStatus, `Archivo cargado: ${data.fileName} (${data.sessions} sesiones)`);
+				await refreshMetrics();
+			});
+
+			refreshBtn.addEventListener("click", async () => {
+				await refreshMetrics();
+			});
+
+			chatBtn.addEventListener("click", async () => {
+				const message = chatInput.value.trim();
+				if (!message) return;
+
+				addMessage("user", message);
+				chatInput.value = "";
+				setStatus(chatStatus, "Consultando a Gemini...");
+
+				const res = await fetch("/api/chat", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ message }),
+				});
+
+				const data = await res.json();
+				if (!res.ok) {
+					setStatus(chatStatus, data.error || "Error en chat", true);
+					addMessage("bot", data.error || "No pude responder en este momento.");
+					return;
+				}
+
+				setStatus(chatStatus, `Respuesta generada con ${data.tool}`);
+				addMessage("bot", data.answer);
+			});
+
+			addMessage("bot", "Hola. Carga un CSV y luego preguntame sobre comportamiento de usuarios.");
+		</script>
+	</body>
+</html>
