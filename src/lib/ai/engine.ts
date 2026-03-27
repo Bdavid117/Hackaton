@@ -107,7 +107,7 @@ export async function answerWithAI(
 ) {
   const env = getEnvConfig();
   if (!env.aiApiKey) {
-    throw new AIIntegrationError("Falta la variable DEEPSEEK_API_KEY en el entorno del servidor.", "AI_CONFIG");
+    throw new AIIntegrationError("Falta la variable ANTHROPIC_API_KEY en el entorno del servidor.", "AI_CONFIG");
   }
   const safeQuestion = sanitizeQuestion(question);
   if (!safeQuestion) {
@@ -132,10 +132,11 @@ export async function answerWithAI(
   ].join("\n");
 
   const bodyData = {
-    model: "deepseek-chat",
+    model: "claude-3-haiku-20240307",
+    max_tokens: 1024,
+    system: prompt,
     messages: [
-      { role: "system", content: prompt },
-      { role: "user", content: safeQuestion }
+      { role: "user", "content": safeQuestion }
     ]
   };
 
@@ -144,11 +145,12 @@ export async function answerWithAI(
     try {
       const contr = new AbortController();
       const res = await runWithTimeout(
-        fetch("https://api.deepseek.com/chat/completions", {
+        fetch("https://api.anthropic.com/v1/messages", {
           method: "POST",
-          headers: { 
-            "Content-Type": "application/json", 
-            "Authorization": `Bearer ${env.aiApiKey}` 
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": env.aiApiKey,
+            "anthropic-version": "2023-06-01"
           },
           body: JSON.stringify(bodyData),
           signal: contr.signal
@@ -160,10 +162,9 @@ export async function answerWithAI(
       if (!res.ok) {
         throw new Error(`Error API HTTP ${res.status}`);
       }
-      
-      const data = await res.json();
-      const text = data.choices?.[0]?.message?.content?.trim();
 
+      const data = await res.json();
+      const text = data.content?.[0]?.text?.trim();
       return {
         answer: text || "No pude generar una respuesta en este momento. Intenta reformular la pregunta.",
         tool: toolResult.primaryTool,
@@ -171,7 +172,7 @@ export async function answerWithAI(
         rawToolPayload: toolResult.payloadByTool,
       };
     } catch (error: any) {
-      if (lastStatus === 402 || lastStatus === 429 || lastStatus === 401) break;
+      if (lastStatus === 402 || lastStatus === 429 || lastStatus === 401 || lastStatus === 400) break;
       if (attempt >= env.aiMaxRetries) break;
       const backoffMs = 250 * (attempt + 1);
       await new Promise((resolve) => setTimeout(resolve, backoffMs));
@@ -179,7 +180,7 @@ export async function answerWithAI(
   }
 
   let codeMatch = "AI_UNAVAILABLE";
-  if (lastStatus === 429 || lastStatus === 402) codeMatch = "AI_QUOTA";
+  if (lastStatus === 429 || lastStatus === 402 || lastStatus === 400) codeMatch = "AI_QUOTA";
   if (lastStatus === 401 || lastStatus === 403) codeMatch = "AI_AUTH";
 
   return {

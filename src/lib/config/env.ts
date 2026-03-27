@@ -51,7 +51,7 @@ export function getEnvConfig(): EnvConfig {
   const dotEnv = readDotEnvMap();
 
   return {
-    aiApiKey: getRawEnvValue(dotEnv, "DEEPSEEK_API_KEY"),
+    aiApiKey: getRawEnvValue(dotEnv, "ANTHROPIC_API_KEY"),
     maxUploadBytes: parsePositiveInt(getRawEnvValue(dotEnv, "MAX_UPLOAD_BYTES"), 10 * 1024 * 1024),
     chatRateLimitMax: parsePositiveInt(getRawEnvValue(dotEnv, "CHAT_RATE_LIMIT_MAX"), 20),
     chatRateLimitWindowMs: parsePositiveInt(getRawEnvValue(dotEnv, "CHAT_RATE_LIMIT_WINDOW_MS"), 60 * 1000),

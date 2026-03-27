@@ -3,7 +3,7 @@ import { getEnvConfig } from "../../lib/config/env";
 import { okJson } from "../../lib/http/response";
 
 function validateAIKeyFormat(value: string): boolean {
-  return value.includes("sk-"); // Validacion basica para DeepSeek (y openAI)
+  return value.includes("sk-"); // Validacion basica para Anthropic, OpenAI, etc.
 }
 
 type ProbeResult = {
@@ -36,14 +36,15 @@ async function probeAI(apiKey: string, timeoutMs: number): Promise<ProbeResult> 
   try {
     const contr = new AbortController();
     const res = await runWithTimeout(
-      fetch("https://api.deepseek.com/chat/completions", {
+      fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json", 
-          "Authorization": `Bearer ${apiKey}` 
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01"
         },
         body: JSON.stringify({
-          model: "deepseek-chat",
+          model: "claude-3-haiku-20240307",
           messages: [{ role: "user", content: "ok" }],
           max_tokens: 1
         }),
@@ -72,6 +73,15 @@ async function probeAI(apiKey: string, timeoutMs: number): Promise<ProbeResult> 
       return {
         status: "provider_quota_exceeded",
         message: "IA excedio la cuota o el rate limit de la cuenta.",
+        checkedAt,
+      };
+    }
+
+    const t = await res.text();
+    if (res.status === 400 && t.includes("credit balance is too low")) {
+      return {
+        status: "provider_quota_exceeded",
+        message: "IA excedio la cuota o saldo de creditos es muy bajo.",
         checkedAt,
       };
     }
