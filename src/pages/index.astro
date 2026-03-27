@@ -2,434 +2,477 @@
 ---
 
 <html lang="es">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>Marketing Copilot - Astro + Gemini</title>
-		<style>
-			:root {
-				--bg: #f4f6fb;
-				--panel: #ffffff;
-				--text: #13243a;
-				--muted: #5f6b7a;
-				--primary: #1d4ed8;
-				--primary-soft: #dbeafe;
-				--danger: #be123c;
-				--border: #dce3ef;
-			}
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Marketing Copilot - Gemini</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f2f7ff;
+        --panel: #ffffff;
+        --ink: #112a47;
+        --muted: #536a84;
+        --brand: #1557dd;
+        --brand-soft: #dfebff;
+        --accent: #f97316;
+        --border: #d5e2f3;
+        --danger: #b4233a;
+        --ok: #0f8a4c;
+        --shadow: 0 14px 34px rgba(17, 42, 71, 0.08);
+      }
 
-			* {
-				box-sizing: border-box;
-			}
+      * { box-sizing: border-box; }
 
-			body {
-				margin: 0;
-				font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-				background: radial-gradient(circle at 20% 0%, #e8f0ff 0, #f4f6fb 45%, #edf1fa 100%);
-				color: var(--text);
-			}
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: radial-gradient(circle at 10% 0%, #d8e7ff 0, #f2f7ff 44%, #edf4ff 100%);
+        font-family: "Manrope", "Segoe UI", sans-serif;
+      }
 
-			main {
-				max-width: 1200px;
-				margin: 0 auto;
-				padding: 1rem;
-				display: grid;
-				gap: 1rem;
-			}
+      main {
+        max-width: 1220px;
+        margin: 0 auto;
+        padding: 1rem;
+        display: grid;
+        gap: 1rem;
+      }
 
-			.hero {
-				background: var(--panel);
-				border: 1px solid var(--border);
-				border-radius: 16px;
-				padding: 1rem;
-			}
+      .skip-link {
+        position: absolute;
+        left: 1rem;
+        top: -100px;
+        background: #0a3d9b;
+        color: #fff;
+        padding: 0.55rem 0.8rem;
+        border-radius: 10px;
+        text-decoration: none;
+        z-index: 999;
+      }
 
-			h1 {
-				margin: 0;
-				font-size: 1.6rem;
-			}
+      .skip-link:focus { top: 1rem; }
 
-			.subtitle {
-				margin: 0.5rem 0 0;
-				color: var(--muted);
-			}
+      .hero {
+        background: linear-gradient(145deg, #0f2e54 0%, #184680 65%, #1f5ea7 100%);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: var(--shadow);
+        color: #fff;
+        padding: 1rem;
+      }
 
-			.grid {
-				display: grid;
-				gap: 1rem;
-				grid-template-columns: 1fr;
-			}
+      .hero-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
 
-			.panel {
-				background: var(--panel);
-				border: 1px solid var(--border);
-				border-radius: 16px;
-				padding: 1rem;
-			}
+      h1 {
+        margin: 0;
+        font-family: "Space Grotesk", "Manrope", sans-serif;
+        font-size: 1.45rem;
+      }
 
-			.kpis {
-				display: grid;
-				gap: 0.75rem;
-				grid-template-columns: repeat(3, minmax(0, 1fr));
-			}
+      .subtitle {
+        margin: 0.45rem 0 0;
+        color: #d4e6ff;
+        max-width: 74ch;
+      }
 
-			.kpi {
-				border: 1px solid var(--border);
-				border-radius: 12px;
-				padding: 0.75rem;
-			}
+      .status { color: var(--muted); font-size: 0.9rem; }
+      .error { color: var(--danger); }
 
-			.kpi .label {
-				color: var(--muted);
-				font-size: 0.8rem;
-			}
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: 0 8px 20px rgba(17, 42, 71, 0.05);
+        padding: 0.95rem;
+      }
 
-			.kpi .value {
-				font-size: 1.25rem;
-				font-weight: 700;
-				margin-top: 0.3rem;
-			}
+      .panel h2 {
+        margin: 0 0 0.7rem;
+        font-family: "Space Grotesk", "Manrope", sans-serif;
+        font-size: 1.04rem;
+      }
 
-			input[type="file"],
-			input[type="text"],
-			button {
-				font: inherit;
-			}
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        padding: 0.28rem 0.62rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+      }
 
-			button {
-				border: 0;
-				border-radius: 10px;
-				padding: 0.65rem 0.9rem;
-				background: var(--primary);
-				color: white;
-				cursor: pointer;
-			}
+      .badge.warn { background: #fff4d9; color: #8a5d00; border-color: #f3d58e; }
+      .badge.ok { background: #e3f9ed; color: var(--ok); border-color: #9fe1bf; }
+      .badge.error { background: #ffe8ec; color: #9f1f37; border-color: #ffc5cf; }
 
-			button.secondary {
-				background: var(--primary-soft);
-				color: var(--primary);
-			}
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
 
-			.row {
-				display: flex;
-				gap: 0.5rem;
-				flex-wrap: wrap;
-				align-items: center;
-			}
+      .start-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
 
-			.status {
-				color: var(--muted);
-				font-size: 0.9rem;
-			}
+      input[type="file"], input[type="text"], select, button { font: inherit; }
 
-			.error {
-				color: var(--danger);
-			}
+      input[type="text"], select {
+        border: 1px solid var(--border);
+        border-radius: 11px;
+        padding: 0.6rem 0.72rem;
+        background: #fff;
+        color: var(--ink);
+      }
 
-			.tables {
-				display: grid;
-				gap: 1rem;
-				grid-template-columns: 1fr;
-			}
+      button {
+        border: 0;
+        border-radius: 11px;
+        padding: 0.6rem 0.86rem;
+        background: var(--brand);
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+      }
 
-			table {
-				width: 100%;
-				border-collapse: collapse;
-				font-size: 0.9rem;
-			}
+      button.secondary {
+        background: var(--brand-soft);
+        color: #1a4fb8;
+      }
 
-			th,
-			td {
-				padding: 0.5rem;
-				border-bottom: 1px solid var(--border);
-				text-align: left;
-			}
+      button:disabled { opacity: 0.56; cursor: not-allowed; }
 
-			.chat-box {
-				max-height: 320px;
-				overflow: auto;
-				border: 1px solid var(--border);
-				border-radius: 12px;
-				padding: 0.75rem;
-				background: #fbfdff;
-			}
+      button:focus-visible,
+      input:focus-visible,
+      select:focus-visible,
+      a:focus-visible {
+        outline: 3px solid #1f62e1;
+        outline-offset: 2px;
+      }
 
-			.msg {
-				margin: 0.5rem 0;
-				padding: 0.6rem 0.7rem;
-				border-radius: 10px;
-				line-height: 1.45;
-			}
+      .chat-box {
+        max-height: 320px;
+        overflow: auto;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 0.7rem;
+        background: #f8fbff;
+      }
 
-			.msg.user {
-				background: #e3edff;
-			}
+      .msg {
+        margin: 0.5rem 0;
+        padding: 0.62rem 0.68rem;
+        border-radius: 10px;
+        line-height: 1.45;
+        white-space: pre-wrap;
+      }
 
-			.msg.bot {
-				background: #eef8ff;
-			}
+      .msg.user { background: #dce9ff; }
+      .msg.bot { background: #e9f4ff; }
 
-			@media (min-width: 900px) {
-				.grid {
-					grid-template-columns: 1fr 1fr;
-				}
+      .chips {
+        margin-top: 0.7rem;
+        display: flex;
+        gap: 0.42rem;
+        flex-wrap: wrap;
+      }
 
-				.tables {
-					grid-template-columns: 1fr 1fr;
-				}
-			}
-		</style>
-	</head>
-	<body>
-		<main>
-			<section class="hero">
-				<h1>Marketing Copilot (Astro + Gemini)</h1>
-				<p class="subtitle">
-					Carga un CSV de Clarity, calcula metricas y consulta insights en lenguaje natural.
-				</p>
-			</section>
+      .chips button {
+        background: #eaf1ff;
+        color: #1646aa;
+        padding: 0.43rem 0.62rem;
+        font-size: 0.82rem;
+      }
 
-			<section class="panel">
-				<h2>1) Cargar CSV</h2>
-				<div class="row">
-					<input id="csvFile" type="file" accept=".csv" />
-					<button id="uploadBtn">Cargar y Procesar</button>
-					<button id="refreshBtn" class="secondary">Actualizar Dashboard</button>
-				</div>
-				<p id="uploadStatus" class="status">Esperando archivo CSV...</p>
-			</section>
+      .workspace-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+      }
 
-			<section class="panel">
-				<h2>2) KPIs</h2>
-				<div class="kpis">
-					<article class="kpi">
-						<div class="label">Sesiones Totales</div>
-						<div class="value" id="kpiSessions">-</div>
-					</article>
-					<article class="kpi">
-						<div class="label">Duracion Promedio (seg)</div>
-						<div class="value" id="kpiDuration">-</div>
-					</article>
-					<article class="kpi">
-						<div class="label">Abandono Rapido (%)</div>
-						<div class="value" id="kpiQuickExit">-</div>
-					</article>
-				</div>
-			</section>
+      .tabs {
+        display: flex;
+        gap: 0.45rem;
+        flex-wrap: wrap;
+      }
 
-			<section class="grid">
-				<article class="panel">
-					<h2>3) Co-piloto con Gemini</h2>
-					<div class="chat-box" id="chatBox"></div>
-					<div class="row" style="margin-top: 0.8rem;">
-						<input
-							id="chatInput"
-							type="text"
-							placeholder="Ejemplo: En que paginas abandonan mas los usuarios?"
-							style="flex: 1; min-width: 260px; padding: 0.65rem; border: 1px solid var(--border); border-radius: 10px;"
-						/>
-						<button id="chatBtn">Preguntar</button>
-					</div>
-					<p id="chatStatus" class="status"></p>
-				</article>
+      .tab-panel {
+        margin-top: 0.85rem;
+      }
 
-				<article class="panel">
-					<h2>4) Insights adicionales</h2>
-					<div id="insights"></div>
-				</article>
-			</section>
+      .kpi-grid {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
 
-			<section class="tables">
-				<article class="panel">
-					<h2>Top Pages</h2>
-					<table id="topPagesTable">
-						<thead>
-							<tr>
-								<th>Pagina</th>
-								<th>Sesiones</th>
-								<th>%</th>
-							</tr>
-						</thead>
-						<tbody></tbody>
-					</table>
-				</article>
+      .kpi-card {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 0.66rem;
+        background: #f8fbff;
+      }
 
-				<article class="panel">
-					<h2>Exit Rate</h2>
-					<table id="exitRateTable">
-						<thead>
-							<tr>
-								<th>Pagina</th>
-								<th>Exits</th>
-								<th>Tasa (%)</th>
-							</tr>
-						</thead>
-						<tbody></tbody>
-					</table>
-				</article>
-			</section>
+      .kpi-card.primary {
+        grid-column: span 2;
+        background: linear-gradient(135deg, #e7f0ff 0%, #dce9ff 100%);
+      }
 
-			<section class="panel">
-				<h2>Flujos mas frecuentes</h2>
-				<table id="flowsTable">
-					<thead>
-						<tr>
-							<th>Desde</th>
-							<th>Hacia</th>
-							<th>Conteo</th>
-						</tr>
-					</thead>
-					<tbody></tbody>
-				</table>
-			</section>
-		</main>
+      .kpi-label { font-size: 0.8rem; color: #3f5976; }
+      .kpi-value { margin-top: 0.25rem; font-size: 1.3rem; font-weight: 800; }
 
-		<script>
-			const uploadBtn = document.getElementById("uploadBtn");
-			const refreshBtn = document.getElementById("refreshBtn");
-			const csvFile = document.getElementById("csvFile");
-			const uploadStatus = document.getElementById("uploadStatus");
+      .charts-grid {
+        margin-top: 0.8rem;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
 
-			const chatBtn = document.getElementById("chatBtn");
-			const chatInput = document.getElementById("chatInput");
-			const chatBox = document.getElementById("chatBox");
-			const chatStatus = document.getElementById("chatStatus");
+      .chart-card {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 0.68rem;
+        background: #f4f9ff;
+      }
 
-			function setStatus(el, text, isError = false) {
-				el.textContent = text;
-				el.classList.toggle("error", isError);
-			}
+      .chart-card h3 { margin: 0; font-size: 0.95rem; }
+      .chart-card p { margin: 0.38rem 0 0.6rem; color: var(--muted); font-size: 0.84rem; }
+      .chart-canvas { width: 100%; min-height: 270px; }
 
-			function addMessage(type, text) {
-				const div = document.createElement("div");
-				div.className = `msg ${type}`;
-				div.textContent = text;
-				chatBox.appendChild(div);
-				chatBox.scrollTop = chatBox.scrollHeight;
-			}
+      .interpretation {
+        display: grid;
+        gap: 0.66rem;
+      }
 
-			function fillTable(id, rows, columns) {
-				const table = document.querySelector(`#${id} tbody`);
-				table.innerHTML = "";
+      .interpretation .block {
+        border: 1px solid var(--border);
+        border-radius: 11px;
+        padding: 0.66rem;
+        background: #f8fbff;
+      }
 
-				if (!rows || rows.length === 0) {
-					const tr = document.createElement("tr");
-					const td = document.createElement("td");
-					td.colSpan = columns.length;
-					td.textContent = "Sin datos";
-					tr.appendChild(td);
-					table.appendChild(tr);
-					return;
-				}
+      .interpretation .block h3 { margin: 0 0 0.35rem; font-size: 0.93rem; }
+      .interpretation ul { margin: 0; padding-left: 1rem; }
 
-				rows.forEach((row) => {
-					const tr = document.createElement("tr");
-					columns.forEach((key) => {
-						const td = document.createElement("td");
-						td.textContent = row[key] ?? "-";
-						tr.appendChild(td);
-					});
-					table.appendChild(tr);
-				});
-			}
+      .tables-grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: 1fr;
+      }
 
-			function renderInsights(data) {
-				const root = document.getElementById("insights");
-				const ghost = data?.insights?.ghostPages?.[0];
-				const highIntent = data?.insights?.highIntent;
-				const funnel = data?.insights?.funnelDrop;
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+      }
 
-				root.innerHTML = `
-					<p><strong>Pagina fantasma principal:</strong> ${ghost ? `${ghost.page} (${ghost.lowEngagementPct}%)` : "-"}</p>
-					<p><strong>Sesiones de alta intencion:</strong> ${highIntent ? `${highIntent.highIntentSessions} (${highIntent.highIntentPct}%)` : "-"}</p>
-					<p><strong>Caida Awareness -> Evaluation:</strong> ${funnel ? `${funnel.dropAwarenessToEvaluationPct}%` : "-"}</p>
-					<p><strong>Caida Evaluation -> Conversion:</strong> ${funnel ? `${funnel.dropEvaluationToConversionPct}%` : "-"}</p>
-				`;
-			}
+      th, td {
+        border-bottom: 1px solid var(--border);
+        padding: 0.5rem;
+        text-align: left;
+      }
 
-			function renderMetrics(data) {
-				document.getElementById("kpiSessions").textContent = data?.kpis?.totalSessions ?? "-";
-				document.getElementById("kpiDuration").textContent = data?.kpis?.avgDurationSec ?? "-";
-				document.getElementById("kpiQuickExit").textContent = data?.kpis?.quickExitPct ?? "-";
+      .is-hidden { display: none !important; }
 
-				fillTable("topPagesTable", data?.topPages ?? [], ["page", "uniqueSessions", "pctSessions"]);
-				fillTable("exitRateTable", data?.exitRate ?? [], ["page", "exits", "exitRatePct"]);
-				fillTable("flowsTable", data?.commonFlows ?? [], ["from", "to", "count"]);
-				renderInsights(data);
-			}
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
 
-			async function refreshMetrics() {
-				const res = await fetch("/api/metrics");
-				const data = await res.json();
+      @media (min-width: 960px) {
+        .start-grid { grid-template-columns: 1fr 1.08fr; }
+        .kpi-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+        .kpi-card.primary { grid-column: span 5; }
+        .charts-grid { grid-template-columns: 1fr 1fr; }
+        .chart-card.wide { grid-column: span 2; }
+        .tables-grid { grid-template-columns: 1fr 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#appMain">Saltar al contenido principal</a>
+    <main id="appMain" tabindex="-1">
+      <section class="hero">
+        <div class="hero-head">
+          <div>
+            <h1>Marketing Copilot - Gemini</h1>
+            <p class="subtitle">Sube tu CSV de comportamiento y consulta insights accionables para marketing y growth.</p>
+          </div>
+          <div class="row" aria-live="polite">
+            <span id="geminiStatusBadge" class="badge warn">Validando Gemini...</span>
+            <button id="refreshGeminiHealthBtn" class="secondary">Revalidar</button>
+          </div>
+        </div>
+        <p id="geminiStatusText" class="status">Comprobando API key y conectividad...</p>
+      </section>
 
-				if (!res.ok) {
-					setStatus(uploadStatus, data.error || "No fue posible cargar metricas.", true);
-					return;
-				}
+      <section class="start-grid">
+        <article class="panel">
+          <h2>Subida de CSV</h2>
+          <div class="row">
+            <label for="csvFile" class="sr-only">Seleccionar archivo CSV</label>
+            <input id="csvFile" type="file" accept=".csv" />
+            <button id="uploadBtn">Cargar y Procesar</button>
+            <button id="refreshBtn" class="secondary">Actualizar</button>
+          </div>
+          <div class="row" style="margin-top: 0.72rem;">
+            <label for="datasetSelect" class="sr-only">Seleccionar dataset activo</label>
+            <select id="datasetSelect" style="min-width: 280px;"></select>
+            <button id="activateDatasetBtn" class="secondary">Activar</button>
+            <button id="deleteDatasetBtn" class="secondary">Eliminar</button>
+            <button id="cleanupDatasetsBtn" class="secondary">Limpiar antiguos</button>
+          </div>
+          <p id="uploadStatus" class="status" aria-live="polite">Sube un archivo CSV para empezar.</p>
+        </article>
 
-				setStatus(
-					uploadStatus,
-					`Dataset: ${data.sourceName} | Actualizado: ${new Date(data.updatedAt).toLocaleTimeString()}`
-				);
-				renderMetrics(data);
-			}
+        <article class="panel">
+          <h2>Copiloto de Marketing</h2>
+          <div id="chatBox" class="chat-box" role="log" aria-live="polite" aria-relevant="additions text"></div>
+          <div class="row" style="margin-top: 0.75rem;">
+            <label for="chatInput" class="sr-only">Mensaje para Gemini</label>
+            <input id="chatInput" type="text" placeholder="Ejemplo: ¿Que accion priorizo para mejorar conversion?" style="flex: 1; min-width: 240px;" />
+            <button id="chatBtn">Preguntar</button>
+          </div>
+          <div id="quickQuestions" class="chips">
+            <button data-question="Cuales son las principales oportunidades de conversion para este dataset?">Oportunidades</button>
+            <button data-question="En que parte del embudo estamos perdiendo mas usuarios y que accion recomiendas?">Fuga embudo</button>
+            <button data-question="Dame un plan de accion de 7 dias para mejorar leads con estos datos.">Plan 7 dias</button>
+          </div>
+          <p id="chatStatus" class="status" aria-live="polite"></p>
+          <p id="chatDataset" class="status">Dataset activo para chat: -</p>
+        </article>
+      </section>
 
-			uploadBtn.addEventListener("click", async () => {
-				const file = csvFile.files?.[0];
-				if (!file) {
-					setStatus(uploadStatus, "Selecciona un CSV antes de cargar.", true);
-					return;
-				}
+      <section id="dataWorkspace" class="panel is-hidden">
+        <div class="workspace-head">
+          <h2>Datos procesados</h2>
+          <div class="tabs" role="tablist" aria-label="Vistas de datos">
+            <button id="tabOverviewBtn" role="tab" aria-selected="true">Resumen</button>
+            <button id="tabInsightsBtn" role="tab" aria-selected="false" class="secondary">Insights</button>
+            <button id="tabTablesBtn" role="tab" aria-selected="false" class="secondary">Tablas</button>
+          </div>
+        </div>
 
-				setStatus(uploadStatus, "Procesando archivo...");
-				const formData = new FormData();
-				formData.append("file", file);
+        <section id="tabOverview" class="tab-panel">
+          <div class="row" style="margin-bottom: 0.7rem;">
+            <label for="objectiveSelect" class="status">Objetivo:</label>
+            <select id="objectiveSelect">
+              <option value="leads">Generacion de leads</option>
+              <option value="retencion">Retencion</option>
+              <option value="engagement">Engagement</option>
+            </select>
+            <button id="exportSummaryBtn" class="secondary">Exportar resumen CSV</button>
+          </div>
 
-				const res = await fetch("/api/upload", {
-					method: "POST",
-					body: formData,
-				});
+          <div class="kpi-grid">
+            <article class="kpi-card primary">
+              <div class="kpi-label">Sesiones Totales</div>
+              <div class="kpi-value" id="kpiSessions">-</div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-label">Duracion Promedio (seg)</div>
+              <div class="kpi-value" id="kpiDuration">-</div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-label">Abandono Rapido (%)</div>
+              <div class="kpi-value" id="kpiQuickExit">-</div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-label">Intencion de Conversion (%)</div>
+              <div class="kpi-value" id="kpiIntentPct">-</div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-label">High Intent (%)</div>
+              <div class="kpi-value" id="kpiHighIntentPct">-</div>
+            </article>
+          </div>
 
-				const data = await res.json();
-				if (!res.ok) {
-					setStatus(uploadStatus, data.error || "Error cargando archivo.", true);
-					return;
-				}
+          <div class="charts-grid">
+            <article class="chart-card">
+              <h3>Top Pages por participacion</h3>
+              <p>Detecta donde concentrar experimentos de conversion.</p>
+              <div id="topPagesChart" class="chart-canvas" role="img" aria-label="Grafica top pages"></div>
+            </article>
+            <article class="chart-card">
+              <h3>Exit Rate critico</h3>
+              <p>Identifica puntos de fuga por pagina.</p>
+              <div id="exitRateChart" class="chart-canvas" role="img" aria-label="Grafica exit rate"></div>
+            </article>
+            <article class="chart-card wide">
+              <h3>Embudo de Marketing</h3>
+              <p>Awareness -> Evaluation -> Conversion.</p>
+              <div id="funnelChart" class="chart-canvas" role="img" aria-label="Grafica embudo"></div>
+            </article>
+          </div>
+        </section>
 
-				setStatus(uploadStatus, `Archivo cargado: ${data.fileName} (${data.sessions} sesiones)`);
-				await refreshMetrics();
-			});
+        <section id="tabInsights" class="tab-panel is-hidden">
+          <div id="insights"></div>
+        </section>
 
-			refreshBtn.addEventListener("click", async () => {
-				await refreshMetrics();
-			});
+        <section id="tabTables" class="tab-panel is-hidden">
+          <div class="tables-grid">
+            <article class="panel">
+              <h2>Top Pages</h2>
+              <table id="topPagesTable">
+                <caption class="sr-only">Paginas con mayor trafico</caption>
+                <thead>
+                  <tr><th scope="col">Pagina</th><th scope="col">Sesiones</th><th scope="col">%</th></tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </article>
+            <article class="panel">
+              <h2>Exit Rate</h2>
+              <table id="exitRateTable">
+                <caption class="sr-only">Tasa de salida por pagina</caption>
+                <thead>
+                  <tr><th scope="col">Pagina</th><th scope="col">Exits</th><th scope="col">Tasa (%)</th></tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </article>
+          </div>
+          <article class="panel" style="margin-top: 0.9rem;">
+            <h2>Flujos mas frecuentes</h2>
+            <table id="flowsTable">
+              <caption class="sr-only">Flujos de navegacion mas frecuentes</caption>
+              <thead>
+                <tr><th scope="col">Desde</th><th scope="col">Hacia</th><th scope="col">Conteo</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </article>
+        </section>
+      </section>
+    </main>
 
-			chatBtn.addEventListener("click", async () => {
-				const message = chatInput.value.trim();
-				if (!message) return;
-
-				addMessage("user", message);
-				chatInput.value = "";
-				setStatus(chatStatus, "Consultando a Gemini...");
-
-				const res = await fetch("/api/chat", {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ message }),
-				});
-
-				const data = await res.json();
-				if (!res.ok) {
-					setStatus(chatStatus, data.error || "Error en chat", true);
-					addMessage("bot", data.error || "No pude responder en este momento.");
-					return;
-				}
-
-				setStatus(chatStatus, `Respuesta generada con ${data.tool}`);
-				addMessage("bot", data.answer);
-			});
-
-			addMessage("bot", "Hola. Carga un CSV y luego preguntame sobre comportamiento de usuarios.");
-		</script>
-	</body>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js" defer></script>
+    <script type="module" src="/js/dashboard/main.js"></script>
+  </body>
 </html>

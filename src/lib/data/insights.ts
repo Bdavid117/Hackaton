@@ -34,8 +34,21 @@ export function getHighIntentSessionsInsight(sessions: ClaritySession[]) {
 
 export function getFunnelDropInsight(sessions: ClaritySession[]) {
   const stage1 = sessions.length;
-  const stage2 = sessions.filter((s) => /pricing|cursos|aws|azure|producto/i.test(s.entryPath + s.exitPath)).length;
-  const stage3 = sessions.filter((s) => /demo|contact|request-demo|checkout/i.test(s.entryPath + s.exitPath)).length;
+
+  const conversionRegex = /demo|contact|request-demo|checkout/i;
+  const evaluationRegex =
+    /pricing|cursos|aws|azure|producto|elementary-school|middle-school|high-school|higher-education|hybrid-laboratories|stem-projects|downloads|testimonials/i;
+
+  const stage3 = sessions.filter((s) => conversionRegex.test(s.entryPath + s.exitPath)).length;
+
+  // Stage 2 includes stage 3 by design to keep a valid monotonic funnel.
+  const stage2 = sessions.filter((s) => {
+    const combined = `${s.entryPath} ${s.exitPath}`;
+    const isEvaluationPath = evaluationRegex.test(combined);
+    const isConversionPath = conversionRegex.test(combined);
+    const behaviorIntent = s.pagesCount >= 2 || s.durationSec >= 45 || s.clicks >= 2;
+    return isEvaluationPath || isConversionPath || behaviorIntent;
+  }).length;
 
   const drop12 = Number((((stage1 - stage2) / Math.max(stage1, 1)) * 100).toFixed(2));
   const drop23 = Number((((stage2 - stage3) / Math.max(stage2, 1)) * 100).toFixed(2));

@@ -12,6 +12,14 @@ MVP para hackathon que analiza comportamiento web (estilo Microsoft Clarity) y r
 ## Funcionalidades
 
 - Carga de CSV desde la UI.
+- Capa de interpretacion de marketing con:
+  - Resumen ejecutivo
+  - Fortalezas y riesgos
+  - Oportunidades
+  - Acciones recomendadas con horizonte e impacto
+  - Enfoque por objetivo de negocio (leads, retencion, engagement)
+  - Segmentacion por dispositivo y canal
+  - Exportacion CSV del resumen ejecutivo
 - Motor analitico con metricas clave:
   - Top pages
   - Exit rate
@@ -55,6 +63,7 @@ Variables opcionales recomendadas para entorno profesional:
 - `CHAT_RATE_LIMIT_WINDOW_MS` (default `60000`): ventana de rate limit en milisegundos.
 - `GEMINI_TIMEOUT_MS` (default `20000`): timeout de llamada a Gemini.
 - `GEMINI_MAX_RETRIES` (default `2`): cantidad de reintentos en errores transitorios.
+- `MAX_DATASET_VERSIONS` (default `10`): cantidad maxima de versiones de dataset retenidas.
 
 1. Ejecutar en desarrollo:
 
@@ -65,7 +74,7 @@ npm run dev
 ## Uso rapido
 
 1. Abre la app en `http://localhost:4321`.
-1. Carga un CSV (puedes usar `1_Data_Recordings.csv`).
+1. Carga un CSV (puedes usar `data/datasets/1_Data_Recordings.csv` o `data/datasets/2_Data_Metrics.csv`).
 1. Pulsa **Cargar y Procesar**.
 1. Haz preguntas en el chat.
 
@@ -76,6 +85,13 @@ npm run generate:sample
 ```
 
 Genera `data/sample_clarity.csv` para pruebas y demo.
+
+## Organizacion de datos
+
+- Datasets base del proyecto: `data/datasets/`.
+- Estado y manifiesto del dataset activo: `data/runtime/datasets/manifest.json`.
+- Historial versionado de cargas: `data/runtime/datasets/*.json`.
+- Auditoria operativa (JSONL): `data/runtime/audit/events.jsonl`.
 
 ## Preguntas demo recomendadas
 
@@ -88,6 +104,12 @@ Genera `data/sample_clarity.csv` para pruebas y demo.
 ## Notas de implementacion
 
 - El estado de sesiones se mantiene en memoria del servidor para simplificar el MVP.
-- Si reinicias el servidor, debes volver a cargar el CSV.
+- El estado del ultimo CSV cargado se persiste automaticamente en disco.
+- Cada carga CSV crea una nueva version de dataset y puedes activarla desde la UI.
+- Puedes eliminar datasets desde la UI; el sistema reasigna automaticamente el dataset activo.
+- Puedes limpiar datasets antiguos desde la UI manteniendo solo N versiones recientes.
+- Las acciones criticas (upload, activar, eliminar, limpieza, chat) quedan registradas en auditoria.
+- El dashboard incluye panel de auditoria operativa con eventos recientes.
 - El endpoint de chat incluye rate limiting en memoria para proteger cuota y estabilidad.
 - El endpoint de upload valida extension `.csv` y limite de tamano configurable.
+- El dashboard prioriza lectura estrategica de negocio por encima de tablas tecnicas.

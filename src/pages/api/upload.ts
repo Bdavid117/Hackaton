@@ -2,11 +2,14 @@ import type { APIRoute } from "astro";
 import { getEnvConfig } from "../../lib/config/env";
 import { loadClaritySessionsFromCsv } from "../../lib/data/loader";
 import { errorJson, okJson } from "../../lib/http/response";
+import { logAuditEvent } from "../../lib/observability/audit";
+import { getRequestIdentity } from "../../lib/security/rateLimit";
 import { setSessions } from "../../lib/store/sessionStore";
 
 export const POST: APIRoute = async ({ request }) => {
   try {
     const env = getEnvConfig();
+    const actor = getRequestIdentity(request);
     const form = await request.formData();
     const file = form.get("file");
 
@@ -19,8 +22,10 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     if (file.size > env.maxUploadBytes) {
+      const maxMB = Number((env.maxUploadBytes / (1024 * 1024)).toFixed(2));
+      const fileMB = Number((file.size / (1024 * 1024)).toFixed(2));
       return errorJson(
-        `El archivo excede el limite permitido (${Math.floor(env.maxUploadBytes / (1024 * 1024))}MB).`,
+        `El archivo pesa ${fileMB}MB y excede el limite permitido de ${maxMB}MB.`,
         413,
         "FILE_TOO_LARGE"
       );
@@ -33,11 +38,19 @@ export const POST: APIRoute = async ({ request }) => {
       return errorJson("No se pudieron leer filas validas del CSV.", 400, "CSV_EMPTY_OR_INVALID");
     }
 
-    setSessions(sessions, file.name);
+    const saved = await setSessions(sessions, file.name);
+
+    await logAuditEvent("upload_dataset", actor, {
+      datasetId: saved.datasetId,
+      sourceName: file.name,
+      sessions: sessions.length,
+      fileSize: file.size,
+    });
 
     return okJson(
       {
         fileName: file.name,
+        datasetId: saved.datasetId,
         sessions: sessions.length,
       },
       200

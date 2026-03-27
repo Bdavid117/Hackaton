@@ -12,18 +12,76 @@ export type ToolResult = {
   payload: unknown;
 };
 
-export function selectToolByQuestion(question: string): string {
+export type MultiToolResult = {
+  primaryTool: string;
+  toolNames: string[];
+  payloadByTool: Record<string, unknown>;
+};
+
+function unique(values: string[]): string[] {
+  return [...new Set(values)];
+}
+
+function includesAny(question: string, terms: string[]): boolean {
+  return terms.some((term) => question.includes(term));
+}
+
+export function selectToolsByQuestion(question: string): string[] {
   const q = question.toLowerCase();
 
-  if (q.includes("aband") || q.includes("exit") || q.includes("salida")) return "get_exit_rate";
-  if (q.includes("flujo") || q.includes("recorrido") || q.includes("embudo")) return "get_common_flows";
-  if (q.includes("convers") || q.includes("demo") || q.includes("contact")) return "get_conversion_intent";
-  if (q.includes("interaccion") || q.includes("engagement") || q.includes("click")) {
-    return "get_avg_interaction";
+  const asksForGlobalAnalysis = includesAny(q, [
+    "resumen",
+    "analiza",
+    "analisis",
+    "diagnostico",
+    "prioriza",
+    "oportunidad",
+    "estrategia",
+    "marketing",
+    "rendimiento general",
+    "que debo hacer",
+  ]);
+
+  if (asksForGlobalAnalysis) {
+    return [
+      "get_conversion_intent",
+      "get_funnel_drop",
+      "get_exit_rate",
+      "get_top_pages",
+      "get_high_intent_sessions",
+    ];
   }
-  if (q.includes("fantasma") || q.includes("retienen")) return "get_ghost_pages";
-  if (q.includes("alta intencion") || q.includes("high intent")) return "get_high_intent_sessions";
-  return "get_top_pages";
+
+  const selected: string[] = [];
+
+  if (includesAny(q, ["aband", "exit", "salida", "rebote"])) selected.push("get_exit_rate");
+  if (includesAny(q, ["flujo", "recorrido", "embudo", "funnel"])) {
+    selected.push("get_common_flows", "get_funnel_drop");
+  }
+  if (includesAny(q, ["convers", "demo", "contact", "lead"])) selected.push("get_conversion_intent");
+  if (includesAny(q, ["interaccion", "engagement", "click"])) selected.push("get_avg_interaction");
+  if (includesAny(q, ["fantasma", "retienen", "ghost"])) selected.push("get_ghost_pages");
+  if (includesAny(q, ["alta intencion", "high intent"])) selected.push("get_high_intent_sessions");
+
+  return unique(selected.length > 0 ? selected : ["get_top_pages"]);
+}
+
+export function selectToolByQuestion(question: string): string {
+  return selectToolsByQuestion(question)[0] ?? "get_top_pages";
+}
+
+export function runTools(toolNames: string[], sessions: ClaritySession[]): MultiToolResult {
+  const normalized = unique(toolNames.length > 0 ? toolNames : ["get_top_pages"]);
+  const payloadByTool: Record<string, unknown> = {};
+  for (const toolName of normalized) {
+    payloadByTool[toolName] = runTool(toolName, sessions).payload;
+  }
+
+  return {
+    primaryTool: normalized[0],
+    toolNames: normalized,
+    payloadByTool,
+  };
 }
 
 export function runTool(toolName: string, sessions: ClaritySession[]): ToolResult {

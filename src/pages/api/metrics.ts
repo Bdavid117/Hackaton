@@ -14,30 +14,65 @@ import {
   getGhostPagesInsight,
   getHighIntentSessionsInsight,
 } from "../../lib/data/insights";
+import {
+  buildMarketingInterpretation,
+  type MarketingObjective,
+} from "../../lib/data/marketingInterpretation";
+import { getMarketingSegmentInsights } from "../../lib/data/segments";
 
-export const GET: APIRoute = async () => {
+function parseMarketingObjective(rawValue: string | null): MarketingObjective {
+  if (rawValue === "retencion" || rawValue === "engagement") return rawValue;
+  return "leads";
+}
+
+export const GET: APIRoute = async ({ request }) => {
   try {
-    const { sessions, sourceName, updatedAt } = getSessions();
+    const url = new URL(request.url);
+    const objective = parseMarketingObjective(url.searchParams.get("objective"));
+    const { datasetId, sessions, sourceName, updatedAt } = await getSessions();
 
     if (sessions.length === 0) {
       return errorJson("Primero carga un CSV para calcular metricas.", 400, "DATASET_REQUIRED");
     }
 
+    const kpis = getKpiSummary(sessions);
+    const topPages = getTopPages(sessions);
+    const exitRate = getExitRate(sessions);
+    const avgInteraction = getAvgInteraction(sessions);
+    const conversionIntent = getConversionIntent(sessions);
+    const commonFlows = getCommonFlows(sessions);
+    const segmentInsights = getMarketingSegmentInsights(sessions);
+    const insights = {
+      ghostPages: getGhostPagesInsight(sessions),
+      highIntent: getHighIntentSessionsInsight(sessions),
+      funnelDrop: getFunnelDropInsight(sessions),
+    };
+
     return okJson(
       {
         sourceName,
+        datasetId,
         updatedAt,
-        kpis: getKpiSummary(sessions),
-        topPages: getTopPages(sessions),
-        exitRate: getExitRate(sessions),
-        avgInteraction: getAvgInteraction(sessions),
-        conversionIntent: getConversionIntent(sessions),
-        commonFlows: getCommonFlows(sessions),
-        insights: {
-          ghostPages: getGhostPagesInsight(sessions),
-          highIntent: getHighIntentSessionsInsight(sessions),
-          funnelDrop: getFunnelDropInsight(sessions),
-        },
+        kpis,
+        topPages,
+        exitRate,
+        avgInteraction,
+        conversionIntent,
+        commonFlows,
+        insights,
+        marketingInterpretation: buildMarketingInterpretation({
+          sourceName,
+          objective,
+          kpis,
+          conversionIntent,
+          topPages,
+          exitRate,
+          segmentInsights,
+          insights: {
+            highIntent: insights.highIntent,
+            funnelDrop: insights.funnelDrop,
+          },
+        }),
       },
       200
     );
