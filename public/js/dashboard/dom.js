@@ -9,7 +9,6 @@ export function getDom() {
     tabInsights: document.getElementById("tabInsights"),
     tabTables: document.getElementById("tabTables"),
     uploadBtn: document.getElementById("uploadBtn"),
-    demoBtn: document.getElementById("demoBtn"),
     refreshBtn: document.getElementById("refreshBtn"),
     advancedDatasetRow: document.getElementById("advancedDatasetRow"),
     csvFile: document.getElementById("csvFile"),
