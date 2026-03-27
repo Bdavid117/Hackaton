@@ -25,3 +25,5 @@ data/runtime/
 
 # jetbrains setting folder
 .idea/
+.vercel/
+dist/
