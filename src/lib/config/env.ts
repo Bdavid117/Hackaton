@@ -2,12 +2,12 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 type EnvConfig = {
-  geminiApiKey: string;
+  aiApiKey: string;
   maxUploadBytes: number;
   chatRateLimitMax: number;
   chatRateLimitWindowMs: number;
-  geminiTimeoutMs: number;
-  geminiMaxRetries: number;
+  aiTimeoutMs: number;
+  aiMaxRetries: number;
 };
 
 function parsePositiveInt(rawValue: string | undefined, fallback: number): number {
@@ -51,11 +51,11 @@ export function getEnvConfig(): EnvConfig {
   const dotEnv = readDotEnvMap();
 
   return {
-    geminiApiKey: getRawEnvValue(dotEnv, "GEMINI_API_KEY"),
+    aiApiKey: getRawEnvValue(dotEnv, "DEEPSEEK_API_KEY"),
     maxUploadBytes: parsePositiveInt(getRawEnvValue(dotEnv, "MAX_UPLOAD_BYTES"), 10 * 1024 * 1024),
     chatRateLimitMax: parsePositiveInt(getRawEnvValue(dotEnv, "CHAT_RATE_LIMIT_MAX"), 20),
     chatRateLimitWindowMs: parsePositiveInt(getRawEnvValue(dotEnv, "CHAT_RATE_LIMIT_WINDOW_MS"), 60 * 1000),
-    geminiTimeoutMs: parsePositiveInt(getRawEnvValue(dotEnv, "GEMINI_TIMEOUT_MS"), 20_000),
-    geminiMaxRetries: parsePositiveInt(getRawEnvValue(dotEnv, "GEMINI_MAX_RETRIES"), 2),
+    aiTimeoutMs: parsePositiveInt(getRawEnvValue(dotEnv, "AI_TIMEOUT_MS"), 20_000),
+    aiMaxRetries: parsePositiveInt(getRawEnvValue(dotEnv, "AI_MAX_RETRIES"), 2),
   };
 }

@@ -31,7 +31,7 @@ async function sendChatMessage(ctx, rawMessage) {
 
   addMessage(ctx.dom.chatBox, "user", message);
   ctx.dom.chatInput.value = "";
-  ctx.setStatus(ctx.dom.chatStatus, "Consultando a Gemini...");
+  ctx.setStatus(ctx.dom.chatStatus, "Consultando a la IA...");
 
   await withButtonLoading(ctx.dom.chatBtn, "Consultando...", async () => {
     const res = await fetch("/api/chat", {

@@ -1,40 +1,40 @@
 import type { APIRoute } from "astro";
-import { answerWithGemini, GeminiIntegrationError } from "../../lib/ai/gemini";
+import { answerWithAI, AIIntegrationError } from "../../lib/ai/engine";
 import { getEnvConfig } from "../../lib/config/env";
 import { errorJson, okJson } from "../../lib/http/response";
 import { logAuditEvent } from "../../lib/observability/audit";
 import { applyRateLimit, getRequestIdentity } from "../../lib/security/rateLimit";
 import { getSessions } from "../../lib/store/sessionStore";
 
-function mapGeminiError(error: GeminiIntegrationError): { status: number; code: string; message: string } {
+function mapAIError(error: AIIntegrationError): { status: number; code: string; message: string } {
   switch (error.code) {
     case "INVALID_QUESTION":
       return { status: 400, code: "INVALID_MESSAGE", message: "La pregunta no tiene texto util para analizar." };
-    case "GEMINI_CONFIG":
-      return { status: 503, code: "GEMINI_NOT_CONFIGURED", message: "Gemini no esta configurado en el servidor." };
-    case "GEMINI_TIMEOUT":
+    case "AI_CONFIG":
+      return { status: 503, code: "AI_NOT_CONFIGURED", message: "Motor de IA no esta configurado en el servidor." };
+    case "AI_TIMEOUT":
       return {
         status: 504,
-        code: "GEMINI_TIMEOUT",
-        message: "Gemini tardo demasiado en responder. Intenta con una pregunta mas puntual.",
+        code: "AI_TIMEOUT",
+        message: "El servidor de IA tardo demasiado en responder. Intenta con una pregunta mas puntual.",
       };
-    case "GEMINI_AUTH":
+    case "AI_AUTH":
       return {
         status: 502,
-        code: "GEMINI_AUTH",
-        message: "Gemini rechazo la API Key. Verifica permisos y validez de la clave.",
+        code: "AI_AUTH",
+        message: "El motor de IA rechazo la API Key. Verifica permisos y validez de la clave.",
       };
-    case "GEMINI_QUOTA":
+    case "AI_QUOTA":
       return {
         status: 429,
-        code: "GEMINI_QUOTA",
-        message: "Se alcanzo el limite de cuota de Gemini. Reintenta en unos minutos.",
+        code: "AI_QUOTA",
+        message: "Se alcanzo el limite de cuota de la IA. Reintenta en unos minutos.",
       };
     default:
       return {
         status: 503,
-        code: "GEMINI_UNAVAILABLE",
-        message: "Gemini no esta disponible temporalmente. Reintenta en breve.",
+        code: "AI_UNAVAILABLE",
+        message: "El motor de IA no esta disponible temporalmente. Reintenta en breve.",
       };
   }
 }
@@ -68,7 +68,7 @@ export const POST: APIRoute = async ({ request }) => {
       return errorJson("Primero carga un CSV para usar el copilot.", 400, "DATASET_REQUIRED");
     }
 
-    const result = await answerWithGemini(message, sessions, {
+    const result = await answerWithAI(message, sessions, {
       datasetId,
       sourceName,
     });
@@ -89,8 +89,8 @@ export const POST: APIRoute = async ({ request }) => {
       200
     );
   } catch (error) {
-    if (error instanceof GeminiIntegrationError) {
-      const mapped = mapGeminiError(error);
+    if (error instanceof AIIntegrationError) {
+      const mapped = mapAIError(error);
       return errorJson(mapped.message, mapped.status, mapped.code);
     }
 

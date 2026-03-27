@@ -1,10 +1,9 @@
 import type { APIRoute } from "astro";
-import { GoogleGenAI } from "@google/genai";
 import { getEnvConfig } from "../../lib/config/env";
 import { okJson } from "../../lib/http/response";
 
-function validateGeminiKeyFormat(value: string): boolean {
-  return /^AIza[0-9A-Za-z_-]{20,}$/.test(value);
+function validateAIKeyFormat(value: string): boolean {
+  return value.includes("sk-"); // Validacion basica para DeepSeek (y openAI)
 }
 
 type ProbeResult = {
@@ -31,55 +30,73 @@ async function runWithTimeout<T>(promise: Promise<T>, timeoutMs: number): Promis
   ]);
 }
 
-async function probeGemini(apiKey: string, timeoutMs: number): Promise<ProbeResult> {
+async function probeAI(apiKey: string, timeoutMs: number): Promise<ProbeResult> {
   const checkedAt = new Date().toISOString();
 
   try {
-    const ai = new GoogleGenAI({ apiKey });
-    await runWithTimeout(
-      ai.models.generateContent({
-        model: "gemini-2.0-flash",
-        contents: "Responde exactamente: ok",
+    const contr = new AbortController();
+    const res = await runWithTimeout(
+      fetch("https://api.deepseek.com/chat/completions", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json", 
+          "Authorization": `Bearer ${apiKey}` 
+        },
+        body: JSON.stringify({
+          model: "deepseek-chat",
+          messages: [{ role: "user", content: "ok" }],
+          max_tokens: 1
+        }),
+        signal: contr.signal
       }),
       timeoutMs
     );
 
-    return {
-      status: "ready",
-      message: "Gemini respondio correctamente.",
-      checkedAt,
-    };
-  } catch (error) {
-    const raw = error instanceof Error ? error.message : "error desconocido";
-    const normalized = raw.toLowerCase();
+    if (res.ok) {
+      return {
+        status: "ready",
+        message: "IA respondio correctamente.",
+        checkedAt,
+      };
+    }
 
-    if (normalized.includes("401") || normalized.includes("403") || normalized.includes("permission")) {
+    if (res.status === 401 || res.status === 403) {
       return {
         status: "provider_auth_error",
-        message: "Gemini rechazo autenticacion o permisos de la API Key.",
+        message: "IA rechazo autenticacion o permisos de la API Key.",
         checkedAt,
       };
     }
 
-    if (normalized.includes("429") || normalized.includes("quota") || normalized.includes("rate")) {
+    if (res.status === 402 || res.status === 429) {
       return {
         status: "provider_quota_exceeded",
-        message: "Gemini excedio la cuota o el rate limit de la cuenta.",
-        checkedAt,
-      };
-    }
-
-    if (normalized.includes("timeout")) {
-      return {
-        status: "provider_timeout",
-        message: "Gemini no respondio dentro del tiempo esperado.",
+        message: "IA excedio la cuota o el rate limit de la cuenta.",
         checkedAt,
       };
     }
 
     return {
       status: "provider_unreachable",
-      message: "No fue posible contactar a Gemini en este momento.",
+      message: `No fue posible contactar a IA en este momento. HTTP ${res.status}`,
+      checkedAt,
+    };
+
+  } catch (error) {
+    const raw = error instanceof Error ? error.message : "error desconocido";
+    const normalized = raw.toLowerCase();
+
+    if (normalized.includes("timeout")) {
+      return {
+        status: "provider_timeout",
+        message: "Motor de IA no respondio dentro del tiempo esperado.",
+        checkedAt,
+      };
+    }
+
+    return {
+      status: "provider_unreachable",
+      message: "No fue posible contactar a IA en este momento.",
       checkedAt,
     };
   }
@@ -90,20 +107,20 @@ export const GET: APIRoute = async ({ request }) => {
   const deep = url.searchParams.get("deep") === "1";
 
   const env = getEnvConfig();
-  const configured = Boolean(env.geminiApiKey);
-  const keyFormatValid = configured ? validateGeminiKeyFormat(env.geminiApiKey) : false;
+  const configured = Boolean(env.aiApiKey);
+  const keyFormatValid = configured ? validateAIKeyFormat(env.aiApiKey) : false;
   const maxUploadMB = Number((env.maxUploadBytes / (1024 * 1024)).toFixed(2));
 
   let probe: ProbeResult | null = null;
 
   if (configured && keyFormatValid) {
     const now = Date.now();
-    const apiKeyChanged = cachedProbeApiKey !== env.geminiApiKey;
+    const apiKeyChanged = cachedProbeApiKey !== env.aiApiKey;
     const shouldRefresh = deep || apiKeyChanged || !cachedProbe || now >= cachedProbeExpiresAt;
     if (shouldRefresh) {
-      cachedProbe = await probeGemini(env.geminiApiKey, Math.min(env.geminiTimeoutMs, 8_000));
+      cachedProbe = await probeAI(env.aiApiKey, Math.min(env.aiTimeoutMs, 8_000));
       cachedProbeExpiresAt = now + 45_000;
-      cachedProbeApiKey = env.geminiApiKey;
+      cachedProbeApiKey = env.aiApiKey;
     }
     probe = cachedProbe;
   }
@@ -121,7 +138,7 @@ export const GET: APIRoute = async ({ request }) => {
       maxUploadBytes: env.maxUploadBytes,
       maxUploadMB,
     },
-    gemini: {
+    ai: {
       configured,
       keyFormatValid,
       status,
