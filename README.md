@@ -43,9 +43,9 @@ Injection\ incorporada en la raíz del backend para evitar suplantaciones de rol
 
 ---
 
-## 🚀 Despliegue en GitHub Pages
+## 🚀 Despliegue en Vercel
 
-Este repositorio está configurado y altamente optimizado para desplegarse mediante GitHub Actions hacia GitHub Pages. 
+Este repositorio está configurado y altamente optimizado para desplegarse mediante GitHub Actions hacia Vercel. 
 
 ### ¡Atención sobre el Entorno SSR!
 La aplicación actual ha sido construida con una arquitectura \Astro SSR (Server-Side Rendering)\ usando \@astrojs/node\ dado a que la aplicación necesita un runtime de Node.js permanente para:
@@ -53,7 +53,7 @@ La aplicación actual ha sido construida con una arquitectura \Astro SSR (Server
 2. Conectarse de forma encriptada y segura a la API de Groq a través de \/api/chat\.
 3. Consultar métricas dinámicas (\/api/metrics\).
 
-> **Nota importante sobre GitHub Pages:** Dado que GitHub pages es un hosting de archivos exclusivamente estáticos (SSG), los endpoints \/api\ (Astro SSR) **no funcionarán inherentemente en el live de páginas de GitHub.** 
+> **Nota importante sobre Vercel:** Dado que Vercel es un hosting de archivos exclusivamente estáticos (SSG), los endpoints \/api\ (Astro SSR) **no funcionarán inherentemente en el live de páginas de GitHub.** 
 > 
 > *Solución corporativa recomendada:* Si se busca mostrar el panel al público, recomendamos hospedar la API backend en **Vercel, Render o Railway** y configurar en modo \static\ el front-end de Astro, o derechamente hacer deploy del bloque a una plataforma Full-stack (ej: Netlify o Vercel donde Node ejecuta Edge Functions automáticamente). 
 
