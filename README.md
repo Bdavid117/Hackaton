@@ -12,7 +12,7 @@ Data & Growth Copilot combina analitica operativa con capacidades de lenguaje na
 
 - **Velocidad:** pasas de CSV a insights ejecutivos sin usar hojas de cálculo complejas.
 - **Claridad Visual:** visualizaciones interactivas impulsadas por Plotly y respuestas del chat renderizadas en markdown limpio tipo burbuja.
-- **Continuidad operativa & Anti-fragilidad:** aunque la API de Anthropic tenga timeout, agote cuota o falle, el sistema responde con un completo análisis local sin bloquear al usuario.
+- **Continuidad operativa & Anti-fragilidad:** aunque la API de Groq tenga timeout, agote cuota o falle, el sistema responde con un completo análisis local sin bloquear al usuario.
 - **Gobierno de datos:** versionado de datasets para comparar cargas y mantener el contexto del negocio intacto durante el análisis.
 - **Seguridad:** protección de \
 Prompt
@@ -28,17 +28,17 @@ Injection\ incorporada en la raíz del backend para evitar suplantaciones de rol
 ## Arquitectura y Flujos
 
 ### AI y UI
-- Integración de **Anthropic Claude 3** para inferencia compleja.
+- Integración de **Groq (Llama 3)** para inferencia compleja.
 - Gráficas responsivas e interactivas utilizando **Plotly.js**.
 - UI del chat conversacional inspirada en aplicaciones de mensajería (burbujas, markdown a través de \marked.js\).
 
 ### Motores Internos
 1. **Motor de Ingestión:** Upload de CSV, normalización y versionado en el Session Store.
 2. **Motor de Métricas:** Cálculo de Top Pages, Exit Rate, Flujos de página a página, Engagement e Intención de Conversión.
-3. **Capa de Decision Intelligence:** El usuario pregunta -> El backend selecciona un tool (ej. obtener base de datos) -> El Contexto se empaqueta junto a reglas estrictas -> Claude devuelve la acción orientada a rentabilidad.
+3. **Capa de Decision Intelligence:** El usuario pregunta -> El backend selecciona un tool (ej. obtener base de datos) -> El Contexto se empaqueta junto a reglas estrictas -> Llama 3 devuelve la acción orientada a rentabilidad.
 
 ### Protecciones de IA
-- *Fallback Local Automático:* Si falta saldo en la cuenta de Claude (error 400) o hay exceso de peticiones, el sistema de fallback local formatea los hallazgos duros y simula una experiencia enriquecida de todas formas.
+- *Fallback Local Automático:* Si falta saldo en la cuenta de Llama 3 (error 400) o hay exceso de peticiones, el sistema de fallback local formatea los hallazgos duros y simula una experiencia enriquecida de todas formas.
 - *Filtros de Contexto:* En la capa del sistema (\ngine.ts\), existe directriz absoluta que detiene cualquier query fuera de analítica de sitios o negocios.
 
 ---
@@ -50,7 +50,7 @@ Este repositorio está configurado y altamente optimizado para desplegarse media
 ### ¡Atención sobre el Entorno SSR!
 La aplicación actual ha sido construida con una arquitectura \Astro SSR (Server-Side Rendering)\ usando \@astrojs/node\ dado a que la aplicación necesita un runtime de Node.js permanente para:
 1. Parsear, procesar y almacenar archivos CSV (\/api/upload\).
-2. Conectarse de forma encriptada y segura a la API de Anthropic a través de \/api/chat\.
+2. Conectarse de forma encriptada y segura a la API de Groq a través de \/api/chat\.
 3. Consultar métricas dinámicas (\/api/metrics\).
 
 > **Nota importante sobre GitHub Pages:** Dado que GitHub pages es un hosting de archivos exclusivamente estáticos (SSG), los endpoints \/api\ (Astro SSR) **no funcionarán inherentemente en el live de páginas de GitHub.** 
@@ -77,7 +77,7 @@ npm install
 2. Configura variables en archivo .env:
 Copia \.env.example\ o crea \.env\ con:
 \\\nv
-ANTHROPIC_API_KEY=sk-ant-api03-xxxx...
+GROQ_API_KEY=gsk_...
 MAX_UPLOAD_BYTES=31457280
 CHAT_RATE_LIMIT_MAX=20
 CHAT_RATE_LIMIT_WINDOW_MS=60000
@@ -99,7 +99,7 @@ npm run generate:sample
 
 El endpoint local interno detecta fallas y diferencia entre:
 - Error de autenticación.
-- Timeout del proveedor (Anthropic).
+- Timeout del proveedor (Groq).
 - Falta de fondos en la cuenta / Rate Limit excedido.
 
-**¿Problemas de 400 bad request en el chat local?** Revisa si la clave Anthropic tiene fondos pre-cargados (Credits). El sistema mostrará un informe enriquecido *offline* en lugar de botar la app en caso de que falten fondos.
+**¿Problemas de 400 bad request en el chat local?** Revisa si la clave Groq tiene fondos pre-cargados (Credits). El sistema mostrará un informe enriquecido *offline* en lugar de botar la app en caso de que falten fondos.

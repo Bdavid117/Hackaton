@@ -106,7 +106,7 @@ export async function answerWithAI(
 ) {
   const env = getEnvConfig();
   if (!env.aiApiKey) {
-    throw new AIIntegrationError("Falta la variable ANTHROPIC_API_KEY en el entorno del servidor.", "AI_CONFIG");
+    throw new AIIntegrationError("Falta la variable GROQ_API_KEY en el entorno del servidor.", "AI_CONFIG");
   }
   const safeQuestion = sanitizeQuestion(question);
   if (!safeQuestion) {
@@ -127,10 +127,17 @@ export async function answerWithAI(
     "5) Prioriza recomendaciones accionables para equipos.",
     buildDatasetContextSnippet(context, sessions),
     `Herramientas utilizadas: ${toolResult.toolNames.join(", ")}`,
-    `Resultado de herramientas (JSON): ${buildToolPayloadSnippet(toolResult.payloadByTool)}`,
+    `Resultado de herramientas (JSON): ${buildToolPayloadSnippet(toolResult.payloadByTool)}`
+  ];
+
+  const bodyData = {
+    model: "llama-3.3-70b-versatile",
     messages: [
-      { role: "user", "content": safeQuestion }
-    ]
+      { role: "system", content: prompt.join("\n") },
+      { role: "user", content: safeQuestion }
+    ],
+    temperature: 0.2,
+    max_tokens: 1024
   };
 
   let lastStatus = 200;
@@ -138,12 +145,11 @@ export async function answerWithAI(
     try {
       const contr = new AbortController();
       const res = await runWithTimeout(
-        fetch("https://api.anthropic.com/v1/messages", {
+        fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-api-key": env.aiApiKey,
-            "anthropic-version": "2023-06-01"
+            "Authorization": `Bearer ${env.aiApiKey}`
           },
           body: JSON.stringify(bodyData),
           signal: contr.signal
@@ -157,7 +163,7 @@ export async function answerWithAI(
       }
 
       const data = await res.json();
-      const text = data.content?.[0]?.text?.trim();
+      const text = data.choices?.[0]?.message?.content?.trim();
       return {
         answer: text || "No pude generar una respuesta en este momento. Intenta reformular la pregunta.",
         tool: toolResult.primaryTool,
