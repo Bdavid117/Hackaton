@@ -13,6 +13,7 @@ export function getDom() {
     refreshGeminiHealthBtn: document.getElementById("refreshGeminiHealthBtn"),
     uploadBtn: document.getElementById("uploadBtn"),
     refreshBtn: document.getElementById("refreshBtn"),
+    advancedDatasetRow: document.getElementById("advancedDatasetRow"),
     csvFile: document.getElementById("csvFile"),
     uploadStatus: document.getElementById("uploadStatus"),
     datasetSelect: document.getElementById("datasetSelect"),

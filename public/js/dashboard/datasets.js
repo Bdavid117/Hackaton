@@ -46,6 +46,11 @@ export async function syncDatasets(ctx) {
   }
 
   populateDatasetSelect(ctx.dom, data.datasets ?? [], data.activeDatasetId);
+
+  if (ctx.state.sessionUploadCompleted) {
+    ctx.showAdvancedDatasetControls?.();
+  }
+
   return {
     activeDatasetId: data.activeDatasetId || "",
     datasets: data.datasets ?? [],
@@ -89,6 +94,8 @@ export function bindDatasetActions(ctx) {
         return;
       }
 
+      ctx.state.sessionUploadCompleted = true;
+      ctx.showAdvancedDatasetControls?.();
       ctx.setStatus(dom.uploadStatus, "Archivo cargado: " + data.fileName + " (" + data.sessions + " sesiones)");
       await ctx.syncDatasets();
       await ctx.refreshMetrics();

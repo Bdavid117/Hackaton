@@ -338,9 +338,9 @@
             <label for="csvFile" class="sr-only">Seleccionar archivo CSV</label>
             <input id="csvFile" type="file" accept=".csv" />
             <button id="uploadBtn">Cargar y Procesar</button>
-            <button id="refreshBtn" class="secondary">Actualizar</button>
+            <button id="refreshBtn" class="secondary is-hidden">Actualizar</button>
           </div>
-          <div class="row" style="margin-top: 0.72rem;">
+          <div id="advancedDatasetRow" class="row is-hidden" style="margin-top: 0.72rem;">
             <label for="datasetSelect" class="sr-only">Seleccionar dataset activo</label>
             <select id="datasetSelect" style="min-width: 280px;"></select>
             <button id="activateDatasetBtn" class="secondary">Activar</button>

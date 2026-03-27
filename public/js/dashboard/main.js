@@ -13,6 +13,7 @@ const state = {
   maxUploadBytes: null,
   maxUploadMB: null,
   hasProcessedData: false,
+  sessionUploadCompleted: false,
 };
 
 const ctx = {
@@ -23,6 +24,8 @@ const ctx = {
   refreshMetrics: null,
   showDataWorkspace: null,
   hideDataWorkspace: null,
+  showAdvancedDatasetControls: null,
+  hideAdvancedDatasetControls: null,
 };
 
 ctx.syncDatasets = () => syncDatasets(ctx);
@@ -60,10 +63,22 @@ ctx.hideDataWorkspace = () => {
   ctx.dom.dataWorkspace?.classList.add("is-hidden");
 };
 
+ctx.showAdvancedDatasetControls = () => {
+  ctx.dom.advancedDatasetRow?.classList.remove("is-hidden");
+  ctx.dom.refreshBtn?.classList.remove("is-hidden");
+};
+
+ctx.hideAdvancedDatasetControls = () => {
+  ctx.dom.advancedDatasetRow?.classList.add("is-hidden");
+  ctx.dom.refreshBtn?.classList.add("is-hidden");
+};
+
 bindDatasetActions(ctx);
 bindMetricsActions(ctx);
 bindChatActions(ctx);
 bindHealthActions(ctx);
+
+ctx.hideAdvancedDatasetControls();
 
 ctx.dom.tabOverviewBtn?.addEventListener("click", () => ctx.showDataWorkspace("overview"));
 ctx.dom.tabInsightsBtn?.addEventListener("click", () => ctx.showDataWorkspace("insights"));
