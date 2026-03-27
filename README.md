@@ -1,115 +1,153 @@
 # Marketing Copilot - Astro + Gemini
 
-MVP para hackathon que analiza comportamiento web (estilo Microsoft Clarity) y responde preguntas de negocio en lenguaje natural con soporte de Gemini.
+Aplicacion web para analizar eventos de comportamiento (formato CSV tipo analitica de navegacion) y responder preguntas de negocio en lenguaje natural.
 
-## Stack
+## Arquitectura tecnica
 
-- Astro 6
-- TypeScript
-- Gemini (`@google/genai`)
-- PapaParse
+### Frontend
 
-## Funcionalidades
+- Framework: Astro 6
+- UI principal: `src/pages/index.astro`
+- Orquestacion cliente modular en `public/js/dashboard/`:
+  - `main.js`: bootstrap, tabs y visibilidad del workspace
+  - `datasets.js`: upload, activacion, eliminacion y limpieza de versiones
+  - `metrics.js`: KPIs, insights y tablas
+  - `chat.js`: flujo de preguntas/respuestas
+  - `health.js`: estado de proveedor IA
+  - `dom.js`: referencias de elementos del DOM
 
-- Carga de CSV desde la UI.
-- Capa de interpretacion de marketing con:
-  - Resumen ejecutivo
-  - Fortalezas y riesgos
-  - Oportunidades
-  - Acciones recomendadas con horizonte e impacto
-  - Enfoque por objetivo de negocio (leads, retencion, engagement)
-  - Segmentacion por dispositivo y canal
-  - Exportacion CSV del resumen ejecutivo
-- Motor analitico con metricas clave:
-  - Top pages
-  - Exit rate
-  - Flujos frecuentes
-  - Interaccion promedio
-  - Conversion intent
-- Insights adicionales:
-  - Paginas fantasma
-  - Sesiones de alta intencion
-  - Caida de embudo
-- Chat de copiloto con respuestas:
-  - Dato clave
-  - Interpretacion
-  - Accion recomendada
+### Backend
 
-## Requisitos
+- APIs Astro en `src/pages/api/`:
+  - `upload.ts`: recibe CSV, valida extension/tamano y crea nueva version de dataset
+  - `metrics.ts`: devuelve resumen, insights y detalles del dataset activo
+  - `chat.ts`: responde preguntas usando Gemini + herramientas analiticas
+  - `health.ts`: estado de configuracion y disponibilidad de Gemini
+- Capa IA en `src/lib/ai/`:
+  - `gemini.ts`: cliente Gemini, prompt estrategico y fallback local
+  - `tools.ts`: seleccion y ejecucion de tools segun la pregunta
+- Capa datos en `src/lib/data/`:
+  - `loader.ts`, `metrics.ts`, `insights.ts`, `navigator.ts`
+- Estado de datasets en `src/lib/store/sessionStore.ts`
+
+## Flujo funcional actual
+
+1. La pantalla inicial muestra solo carga de CSV y chat.
+2. No se activa ningun dataset por defecto al arrancar.
+3. Tras una carga exitosa, se habilita el workspace de datos procesados (Resumen, Insights, Tablas).
+4. El chat usa el contexto del dataset activo cuando existe.
+5. Si Gemini falla (timeout/cuota/proveedor), se entrega una respuesta local de fallback basada en metricas.
+
+## Persistencia de datos
+
+- Entrada de ejemplo en raiz:
+  - `1_Data_Recordings.csv`
+  - `2_Data_Metrics.csv`
+- Versiones procesadas y manifiesto:
+  - `data/runtime/datasets/manifest.json`
+  - `data/runtime/datasets/*.json`
+- Limpieza automatica por limite de versiones (`MAX_DATASET_VERSIONS`).
+
+## Variables de entorno
+
+Archivo `.env` (raiz):
+
+```env
+GEMINI_API_KEY=AIza...
+MAX_UPLOAD_BYTES=31457280
+CHAT_RATE_LIMIT_MAX=20
+CHAT_RATE_LIMIT_WINDOW_MS=60000
+GEMINI_TIMEOUT_MS=20000
+GEMINI_MAX_RETRIES=2
+MAX_DATASET_VERSIONS=10
+```
+
+Notas:
+- La lectura de configuracion prioriza `.env` para reflejar cambios recientes de API key.
+- `health.ts` invalida cache del probe si detecta cambio de API key.
+
+## Endpoints principales
+
+- `GET /api/health`
+  - Estado rapido de configuracion Gemini.
+- `GET /api/health?deep=1`
+  - Probe real al proveedor Gemini.
+- `POST /api/upload`
+  - Carga y procesa CSV.
+- `GET /api/metrics`
+  - Resumen del dataset activo.
+- `POST /api/chat`
+  - Respuesta de copiloto con IA/fallback.
+
+## Estados de salud Gemini
+
+`/api/health` puede retornar:
+
+- `missing_key`
+- `invalid_key_format`
+- `ready`
+- `provider_auth_error`
+- `provider_timeout`
+- `provider_quota_exceeded`
+- `provider_unreachable`
+
+## Desarrollo local
+
+### Requisitos
 
 - Node.js 22+
-- Clave de Gemini
+- npm
 
-## Instalacion
-
-1. Instalar dependencias:
+### Instalar dependencias
 
 ```bash
 npm install
 ```
 
-1. Configurar entorno:
-
-```bash
-cp .env.example .env
-```
-
-Luego edita `.env` y define `GEMINI_API_KEY`.
-
-Variables opcionales recomendadas para entorno profesional:
-
-- `MAX_UPLOAD_BYTES` (default `10485760`): limite maximo del archivo CSV en bytes.
-- `CHAT_RATE_LIMIT_MAX` (default `20`): maximo de consultas de chat por ventana.
-- `CHAT_RATE_LIMIT_WINDOW_MS` (default `60000`): ventana de rate limit en milisegundos.
-- `GEMINI_TIMEOUT_MS` (default `20000`): timeout de llamada a Gemini.
-- `GEMINI_MAX_RETRIES` (default `2`): cantidad de reintentos en errores transitorios.
-- `MAX_DATASET_VERSIONS` (default `10`): cantidad maxima de versiones de dataset retenidas.
-
-1. Ejecutar en desarrollo:
+### Ejecutar en desarrollo
 
 ```bash
 npm run dev
 ```
 
-## Uso rapido
-
-1. Abre la app en `http://localhost:4321`.
-1. Carga un CSV (puedes usar `data/datasets/1_Data_Recordings.csv` o `data/datasets/2_Data_Metrics.csv`).
-1. Pulsa **Cargar y Procesar**.
-1. Haz preguntas en el chat.
-
-## Dataset sintetico opcional
+### Build de produccion
 
 ```bash
-npm run generate:sample
+npm run build
 ```
 
-Genera `data/sample_clarity.csv` para pruebas y demo.
+### Preview local
 
-## Organizacion de datos
+```bash
+npm run preview
+```
 
-- Datasets base del proyecto: `data/datasets/`.
-- Estado y manifiesto del dataset activo: `data/runtime/datasets/manifest.json`.
-- Historial versionado de cargas: `data/runtime/datasets/*.json`.
-- Auditoria operativa (JSONL): `data/runtime/audit/events.jsonl`.
+## Solucion de problemas
 
-## Preguntas demo recomendadas
+### Cambie la API key y sigue mostrando cuota
 
-- Cuales son las paginas con mayor trafico y que porcentaje concentran?
-- En que paginas abandonan mas los usuarios?
-- Cual es el flujo mas frecuente antes de llegar a pricing o demo?
-- Que porcentaje muestra intencion de conversion?
-- Hay paginas que atraen trafico pero no retienen?
+1. Verifica que el valor nuevo este en `.env` y tenga formato `AIza...`.
+2. Ejecuta `GET /api/health?deep=1` para forzar probe sin cache temporal.
+3. Si retorna `provider_quota_exceeded`, la restriccion viene del proyecto/cuenta de Google AI usada por esa key.
+4. Si retorna `provider_auth_error`, revisa permisos/API habilitada en Google AI Studio.
 
-## Notas de implementacion
+### El workspace de datos no aparece
 
-- El estado de sesiones se mantiene en memoria del servidor para simplificar el MVP.
-- El estado del ultimo CSV cargado se persiste automaticamente en disco.
-- Cada carga CSV crea una nueva version de dataset y puedes activarla desde la UI.
-- Puedes eliminar datasets desde la UI; el sistema reasigna automaticamente el dataset activo.
-- Puedes limpiar datasets antiguos desde la UI manteniendo solo N versiones recientes.
-- Las acciones criticas (upload, activar, eliminar, limpieza, chat) quedan registradas en auditoria.
-- El dashboard incluye panel de auditoria operativa con eventos recientes.
-- El endpoint de chat incluye rate limiting en memoria para proteger cuota y estabilidad.
-- El endpoint de upload valida extension `.csv` y limite de tamano configurable.
-- El dashboard prioriza lectura estrategica de negocio por encima de tablas tecnicas.
+- Confirma que la carga CSV termino correctamente.
+- Revisa `GET /api/metrics`; si responde `DATASET_REQUIRED`, aun no hay dataset activo.
+
+## Scripts disponibles
+
+- `npm run dev`
+- `npm run build`
+- `npm run preview`
+- `npm run generate:sample`
+
+## Estado del producto
+
+El proyecto esta orientado a demo de hackathon con arquitectura modular y puntos de extension claros para:
+
+- Autenticacion por usuarios
+- Persistencia en base de datos
+- Historial avanzado de conversaciones
+- Paneles de observabilidad y costos de IA

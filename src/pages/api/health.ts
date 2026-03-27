@@ -20,6 +20,7 @@ type ProbeResult = {
 
 let cachedProbe: ProbeResult | null = null;
 let cachedProbeExpiresAt = 0;
+let cachedProbeApiKey = "";
 
 async function runWithTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   return await Promise.race([
@@ -97,10 +98,12 @@ export const GET: APIRoute = async ({ request }) => {
 
   if (configured && keyFormatValid) {
     const now = Date.now();
-    const shouldRefresh = deep || !cachedProbe || now >= cachedProbeExpiresAt;
+    const apiKeyChanged = cachedProbeApiKey !== env.geminiApiKey;
+    const shouldRefresh = deep || apiKeyChanged || !cachedProbe || now >= cachedProbeExpiresAt;
     if (shouldRefresh) {
       cachedProbe = await probeGemini(env.geminiApiKey, Math.min(env.geminiTimeoutMs, 8_000));
       cachedProbeExpiresAt = now + 45_000;
+      cachedProbeApiKey = env.geminiApiKey;
     }
     probe = cachedProbe;
   }

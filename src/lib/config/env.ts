@@ -35,11 +35,11 @@ function readDotEnvMap(): Map<string, string> {
 }
 
 function getRawEnvValue(dotEnv: Map<string, string>, key: string): string {
-  const runtimeValue = process.env[key];
-  if (typeof runtimeValue === "string" && runtimeValue.trim()) return runtimeValue.trim();
-
   const dotEnvValue = dotEnv.get(key);
   if (typeof dotEnvValue === "string" && dotEnvValue.trim()) return dotEnvValue.trim();
+
+  const runtimeValue = process.env[key];
+  if (typeof runtimeValue === "string" && runtimeValue.trim()) return runtimeValue.trim();
 
   const viteValue = import.meta.env[key];
   if (typeof viteValue === "string" && viteValue.trim()) return viteValue.trim();
