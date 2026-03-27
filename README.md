@@ -43,19 +43,17 @@ Injection\ incorporada en la raíz del backend para evitar suplantaciones de rol
 
 ---
 
-## 🚀 Despliegue en Vercel
+## 🚀 Despliegue en Vercel (Producción)
 
-Este repositorio está configurado y altamente optimizado para desplegarse mediante GitHub Actions hacia Vercel. 
+Este repositorio ha sido configurado robustamente para desplegarse mediante **Vercel** usando el adaptador serverless oficial (`@astrojs/vercel`).
 
-### ¡Atención sobre el Entorno SSR!
-La aplicación actual ha sido construida con una arquitectura \Astro SSR (Server-Side Rendering)\ usando \@astrojs/node\ dado a que la aplicación necesita un runtime de Node.js permanente para:
-1. Parsear, procesar y almacenar archivos CSV (\/api/upload\).
-2. Conectarse de forma encriptada y segura a la API de Groq a través de \/api/chat\.
-3. Consultar métricas dinámicas (\/api/metrics\).
+### Arquitectura Serverless (Edge & Node.js)
+El entorno ahora está construido puramente para funcionar sobre Serverless Functions (SSR), permitiendo:
+1. **Subida Compaginada de Archivos (Chunking):** Superamos el estricto límite de payloads de 4.5MB en Vercel fraccionando grandes datasets (CSVs > 20MB) de lado del cliente en partes de 3MB y armándolos de forma nativa en la capa `/tmp` temporal de Vercel (`/api/upload-chunk`).
+2. **Conexión API IA:** Usa directamente el Endpoint API compatible con OpenAI que provee **Groq** integrando el modelo ultrarrápido `llama-3.3-70b-versatile` asegurando tiempos de respuestas inmediatos en las funciones tipo chat.
+3. **Escritura Segura de Sesiones:** Los CSV parseados en metadatos se guardan de forma segura bajo `os.tmpdir()` para evadir el error _"read-only filesystem"_ típico de ecosistemas severless.
 
-> **Nota importante sobre Vercel:** Dado que Vercel es un hosting de archivos exclusivamente estáticos (SSG), los endpoints \/api\ (Astro SSR) **no funcionarán inherentemente en el live de páginas de GitHub.** 
-> 
-> *Solución corporativa recomendada:* Si se busca mostrar el panel al público, recomendamos hospedar la API backend en **Vercel, Render o Railway** y configurar en modo \static\ el front-end de Astro, o derechamente hacer deploy del bloque a una plataforma Full-stack (ej: Netlify o Vercel donde Node ejecuta Edge Functions automáticamente). 
+> **Importante:** Recuerda añadir en tu entorno de producción de Vercel la variable de entorno `GROQ_API_KEY` para posibilitar que la plataforma complete las inferencias AI. El sistema Astro Serverless detectará la infraestructura Vercel de forma automática.
 
 ---
 
