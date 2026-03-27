@@ -1,25 +1,15 @@
 const charts = new Map();
 
-function getEcharts() {
-  return window.echarts;
+function getPlotly() {
+  return window.Plotly;
 }
 
 function clearAndDispose(id) {
-  const instance = charts.get(id);
-  if (instance) {
-    instance.dispose();
+  const container = document.getElementById(id);
+  if (container && charts.has(id)) {
+    getPlotly()?.purge(container);
     charts.delete(id);
   }
-}
-
-function initChart(id) {
-  const element = document.getElementById(id);
-  const echarts = getEcharts();
-  if (!element || !echarts) return null;
-  clearAndDispose(id);
-  const instance = echarts.init(element);
-  charts.set(id, instance);
-  return instance;
 }
 
 function safePct(value) {
@@ -41,46 +31,48 @@ function renderTopPagesChart(topPages) {
     return;
   }
 
-  const chart = initChart("topPagesChart");
-  if (!chart) return;
+  const id = "topPagesChart";
+  const container = document.getElementById(id);
+  if (!container || !getPlotly()) return;
+  clearAndDispose(id);
 
   const items = topPages.slice(0, 7).reverse();
-  chart.setOption({
-    backgroundColor: "transparent",
-    grid: { left: 120, right: 20, top: 16, bottom: 18 },
-    xAxis: {
-      type: "value",
-      axisLabel: { formatter: "{value}%" },
-      splitLine: { lineStyle: { color: "#d7e3f6" } },
+  const xData = items.map((item) => safePct(item.pctSessions));
+  const yData = items.map((item) => item.page);
+
+  const data = [{
+    type: "bar",
+    x: xData,
+    y: yData,
+    orientation: 'h',
+    marker: {
+      color: "#1659d3",
+      line: {
+        color: '#0e3a8c',
+        width: 1
+      }
     },
-    yAxis: {
-      type: "category",
-      data: items.map((item) => item.page),
-      axisLabel: { color: "#35506f", fontSize: 11 },
+    hoverinfo: "x+y",
+  }];
+
+  const layout = {
+    paper_bgcolor: 'transparent',
+    plot_bgcolor: 'transparent',
+    margin: { l: 150, r: 20, t: 20, b: 40 },
+    xaxis: {
+      title: "Sesiones (%)",
+      ticksuffix: "%",
+      gridcolor: "#d7e3f6"
     },
-    tooltip: {
-      trigger: "axis",
-      axisPointer: { type: "shadow" },
-      valueFormatter: (value) => Number(value).toFixed(2) + "%",
+    yaxis: {
+      title: "",
+      tickfont: { size: 10, color: "#35506f" },
+      automargin: true
     },
-    series: [
-      {
-        type: "bar",
-        data: items.map((item) => safePct(item.pctSessions)),
-        barWidth: 18,
-        itemStyle: {
-          color: "#1659d3",
-          borderRadius: [0, 8, 8, 0],
-        },
-        label: {
-          show: true,
-          position: "right",
-          formatter: ({ value }) => Number(value).toFixed(1) + "%",
-          color: "#223d59",
-        },
-      },
-    ],
-  });
+  };
+
+  getPlotly().newPlot(container, data, layout, { responsive: true, displayModeBar: false });
+  charts.set(id, true);
 }
 
 function renderExitRateChart(exitRate) {
@@ -89,47 +81,43 @@ function renderExitRateChart(exitRate) {
     return;
   }
 
-  const chart = initChart("exitRateChart");
-  if (!chart) return;
+  const id = "exitRateChart";
+  const container = document.getElementById(id);
+  if (!container || !getPlotly()) return;
+  clearAndDispose(id);
 
   const items = exitRate.slice(0, 6);
-  chart.setOption({
-    backgroundColor: "transparent",
-    legend: {
-      top: 0,
-      textStyle: { color: "#35506f" },
-      data: ["Exit Rate"],
+  const xData = items.map((item) => item.page);
+  const yData = items.map((item) => safePct(item.exitRatePct));
+
+  const data = [{
+    x: xData,
+    y: yData,
+    type: "scatter",
+    mode: "lines+markers",
+    marker: { size: 8, color: "#f97316" },
+    line: { width: 3, color: "#f97316", shape: "spline" },
+    fill: "tozeroy",
+    fillcolor: "rgba(249, 115, 22, 0.16)",
+    hoverinfo: "y+x"
+  }];
+
+  const layout = {
+    paper_bgcolor: 'transparent',
+    plot_bgcolor: 'transparent',
+    margin: { l: 50, r: 20, t: 20, b: 80 },
+    xaxis: {
+      tickangle: 25,
+      tickfont: { size: 10, color: "#35506f" }
     },
-    grid: { left: 32, right: 16, top: 34, bottom: 26 },
-    xAxis: {
-      type: "category",
-      data: items.map((item) => item.page),
-      axisLabel: { rotate: 22, color: "#35506f", fontSize: 11 },
-      axisLine: { lineStyle: { color: "#c5d6ee" } },
-    },
-    yAxis: {
-      type: "value",
-      axisLabel: { formatter: "{value}%" },
-      splitLine: { lineStyle: { color: "#d7e3f6" } },
-    },
-    tooltip: {
-      trigger: "axis",
-      valueFormatter: (value) => Number(value).toFixed(2) + "%",
-    },
-    series: [
-      {
-        name: "Exit Rate",
-        type: "line",
-        smooth: true,
-        symbol: "circle",
-        symbolSize: 8,
-        lineStyle: { width: 3, color: "#f97316" },
-        itemStyle: { color: "#f97316" },
-        areaStyle: { color: "rgba(249, 115, 22, 0.16)" },
-        data: items.map((item) => safePct(item.exitRatePct)),
-      },
-    ],
-  });
+    yaxis: {
+      ticksuffix: "%",
+      gridcolor: "#d7e3f6"
+    }
+  };
+
+  getPlotly().newPlot(container, data, layout, { responsive: true, displayModeBar: false });
+  charts.set(id, true);
 }
 
 function renderFunnelChart(funnelDrop) {
@@ -138,62 +126,40 @@ function renderFunnelChart(funnelDrop) {
     return;
   }
 
-  const chart = initChart("funnelChart");
-  if (!chart) return;
+  const id = "funnelChart";
+  const container = document.getElementById(id);
+  if (!container || !getPlotly()) return;
+  clearAndDispose(id);
 
   const awareness = Number(funnelDrop.stageAwareness || 0);
   const evaluation = Number(funnelDrop.stageEvaluation || 0);
   const conversion = Number(funnelDrop.stageConversion || 0);
 
-  chart.setOption({
-    backgroundColor: "transparent",
-    tooltip: {
-      trigger: "item",
-      formatter: (params) => params.name + ": " + Number(params.value).toLocaleString("es-CO"),
-    },
-    legend: {
-      top: 0,
-      textStyle: { color: "#35506f" },
-    },
-    series: [
-      {
-        name: "Embudo",
-        type: "funnel",
-        left: "10%",
-        top: 28,
-        bottom: 8,
-        width: "80%",
-        min: 0,
-        max: Math.max(awareness, evaluation, conversion, 1),
-        minSize: "30%",
-        maxSize: "100%",
-        sort: "descending",
-        gap: 6,
-        label: {
-          show: true,
-          formatter: ({ name, value }) => name + "\n" + Number(value).toLocaleString("es-CO"),
-          color: "#0f2a44",
-          fontWeight: 600,
-        },
-        itemStyle: {
-          borderColor: "#ffffff",
-          borderWidth: 2,
-        },
-        data: [
-          { value: awareness, name: "Awareness" },
-          { value: evaluation, name: "Evaluation" },
-          { value: conversion, name: "Conversion" },
-        ],
-      },
-    ],
-  });
+  const data = [{
+    type: "funnel",
+    y: ["Awareness", "Evaluation", "Conversion"],
+    x: [awareness, evaluation, conversion],
+    hoverinfo: "x+percent initial+percent previous",
+    marker: {
+      color: ["#3b82f6", "#f59e0b", "#10b981"]
+    }
+  }];
+
+  const layout = {
+    paper_bgcolor: 'transparent',
+    plot_bgcolor: 'transparent',
+    margin: { l: 100, r: 20, t: 20, b: 20 }
+  };
+
+  getPlotly().newPlot(container, data, layout, { responsive: true, displayModeBar: false });
+  charts.set(id, true);
 }
 
 export function renderMarketingCharts(data) {
-  if (!getEcharts()) {
-    renderEmptyChartState("topPagesChart", "No se pudo cargar la libreria de graficas.");
-    renderEmptyChartState("exitRateChart", "No se pudo cargar la libreria de graficas.");
-    renderEmptyChartState("funnelChart", "No se pudo cargar la libreria de graficas.");
+  if (!getPlotly()) {
+    renderEmptyChartState("topPagesChart", "No se pudo cargar la libreria Plotly.");
+    renderEmptyChartState("exitRateChart", "No se pudo cargar la libreria Plotly.");
+    renderEmptyChartState("funnelChart", "No se pudo cargar la libreria Plotly.");
     return;
   }
 
@@ -203,12 +169,24 @@ export function renderMarketingCharts(data) {
 }
 
 export function resizeMarketingCharts() {
-  charts.forEach((instance) => {
-    instance.resize();
-  });
+  if (getPlotly()) {
+    charts.forEach((_, id) => {
+      const container = document.getElementById(id);
+      if (container) {
+        getPlotly().Plots.resize(container);
+      }
+    });
+  }
 }
 
 export function disposeMarketingCharts() {
-  charts.forEach((instance) => instance.dispose());
+  if (getPlotly()) {
+    charts.forEach((_, id) => {
+      const container = document.getElementById(id);
+      if (container) {
+        getPlotly().purge(container);
+      }
+    });
+  }
   charts.clear();
 }

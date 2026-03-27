@@ -3,7 +3,11 @@ import { withButtonLoading } from "./ui-utils.js";
 function addMessage(chatBox, type, text) {
   const div = document.createElement("div");
   div.className = "msg " + type;
-  div.textContent = text;
+  if (type === "bot" && window.marked) {
+    div.innerHTML = window.marked.parse(text);
+  } else {
+    div.textContent = text;
+  }
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 }

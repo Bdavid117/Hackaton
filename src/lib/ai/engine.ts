@@ -63,41 +63,40 @@ function buildLocalFallbackAnswer(
   const notes: string[] = [];
   if (conversion && Number.isFinite(Number(conversion.intentPct))) {
     notes.push(
-      "Dato clave: la intencion de conversion observada es " + Number(conversion.intentPct).toFixed(2) + "%."
+      "**Dato clave:** La intención de conversión observada es **" + Number(conversion.intentPct).toFixed(2) + "%**."
     );
   }
   if (topExit?.page) {
     notes.push(
-      "Interpretacion: la pagina con mayor salida es " +
+      "**Interpretación:** La página con mayor salida es `" +
         topExit.page +
-        " con " +
+        "` con un **" +
         Number(topExit.exitRatePct || 0).toFixed(2) +
-        "% de exit rate."
+        "%** de *exit rate*."
     );
   }
   if (funnel && Number.isFinite(Number(funnel.dropEvaluationToConversionPct))) {
     notes.push(
-      "Accion priorizada: reduce friccion en Evaluation -> Conversion (caida " +
+      "**Acción priorizada:** Reduce fricción en *Evaluation → Conversion* (caída del **" +
         Number(funnel.dropEvaluationToConversionPct).toFixed(2) +
-        "%) con pruebas A/B de CTA y mensaje de valor."
+        "%**) con pruebas A/B de CTA y mensaje de valor."
     );
   }
   if (topPage?.page) {
     notes.push(
-      "Impacto esperado: optimizar la pagina " + topPage.page + " puede mover resultados por su alto peso de trafico."
+      "**Impacto esperado:** Optimizar la página `" + topPage.page + "` puede mover resultados por su alto peso de tráfico."
     );
   }
 
   if (notes.length === 0) {
-    notes.push("Dato clave: no hay suficientes metricas calculadas para generar recomendacion confiable.");
-    notes.push("Accion priorizada: valida el dataset activo y vuelve a cargar metricas para completar el analisis.");
+    notes.push("Basado en el dataset actual, no hay suficientes métricas calculadas para generar una recomendación profunda.");
+    notes.push("**Acción:** Valida el dataset activo y vuelve a cargar métricas para completar el análisis.");
   }
 
   return [
-    "Aviso operativo: IA no estuvo disponible (" + failureCode + ") y se activo analisis local de contingencia.",
-    "Dataset analizado: " + context.sourceName + " (" + context.datasetId + ").",
+    `**Análisis de datos: ${context.sourceName}**`,
     ...notes,
-  ].join("\n");
+  ].join("\n\n");
 }
 
 export async function answerWithAI(
