@@ -2,6 +2,7 @@ import type { ClaritySession } from "../data/loader";
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
+import os from "node:os";
 
 type SessionState = {
   datasetId: string;
@@ -37,7 +38,8 @@ const state: SessionState = {
   updatedAt: "",
 };
 
-const RUNTIME_ROOT = path.join(process.cwd(), "data", "runtime");
+const isVercel = !!process.env.VERCEL;
+const RUNTIME_ROOT = isVercel ? path.join(os.tmpdir(), "hackaton_runtime") : path.join(process.cwd(), "data", "runtime");
 const DATASETS_DIR = path.join(RUNTIME_ROOT, "datasets");
 const MANIFEST_PATH = path.join(DATASETS_DIR, "manifest.json");
 const LEGACY_SESSION_STORE_PATH = path.join(RUNTIME_ROOT, "session-store.json");
