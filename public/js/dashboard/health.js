@@ -45,7 +45,11 @@ export async function refreshGeminiHealth(ctx, options = {}) {
     const status = data?.gemini?.status;
     const ready = Boolean(data?.gemini?.ready);
     ctx.state.geminiReady = ready;
-    setChatEnabled(ctx.dom, ready);
+    
+    // Habilitar chat siempre que haya una clave, para usar el fallback local si Gemini falla
+    const canUseChat = status !== "missing_key" && status !== "invalid_key_format";
+    ctx.state.chatEnabled = canUseChat;
+    setChatEnabled(ctx.dom, canUseChat);
 
     if (ready) {
       setGeminiStatusUI(
@@ -91,8 +95,8 @@ export async function refreshGeminiHealth(ctx, options = {}) {
       setGeminiStatusUI(
         ctx.dom,
         "warn",
-        "Gemini sin cuota disponible",
-        data?.gemini?.probeMessage || "La cuenta de Gemini alcanzo su cuota. Se usara fallback local en chat."
+        "Modo Offline (Sin Cuota AI)",
+        "La clave se leyo bien pero Google rechaza por cuota superada (o limite 0 en tu region). El chat usara modelo de fallback."
       );
       return;
     }

@@ -17,10 +17,10 @@ function buildErrorHint(code) {
 }
 
 async function sendChatMessage(ctx, rawMessage) {
-  if (!ctx.state.geminiReady) {
+  if (ctx.state.chatEnabled === false) {
     ctx.setStatus(
       ctx.dom.chatStatus,
-      "Gemini no esta listo. Revisa el estado en la cabecera y usa Revalidar.",
+      "Chat deshabilitado. Revisa la configuracion de tu API Key en la variable de entorno.",
       true
     );
     return;
