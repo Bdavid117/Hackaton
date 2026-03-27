@@ -1,56 +1,166 @@
-# Marketing Copilot - Astro + Gemini
+# Marketing Copilot
 
-Aplicacion web para analizar eventos de comportamiento (formato CSV tipo analitica de navegacion) y responder preguntas de negocio en lenguaje natural.
+Convierte datos crudos de comportamiento web en decisiones de marketing accionables en minutos.
 
-## Arquitectura tecnica
+Marketing Copilot combina analitica operativa con IA para responder preguntas de negocio como:
 
-### Frontend
+- Donde estamos perdiendo conversion.
+- Que paginas retienen mejor el trafico calificado.
+- Que acciones priorizar esta semana para mejorar resultados.
 
-- Framework: Astro 6
-- UI principal: `src/pages/index.astro`
-- Orquestacion cliente modular en `public/js/dashboard/`:
-  - `main.js`: bootstrap, tabs y visibilidad del workspace
-  - `datasets.js`: upload, activacion, eliminacion y limpieza de versiones
-  - `metrics.js`: KPIs, insights y tablas
-  - `chat.js`: flujo de preguntas/respuestas
-  - `health.js`: estado de proveedor IA
-  - `dom.js`: referencias de elementos del DOM
+## Propuesta de valor
 
-### Backend
+- Velocidad: pasas de CSV a insights ejecutivos sin hojas de calculo manuales.
+- Claridad: te muestra datos, interpretacion y accion sugerida en un mismo flujo.
+- Continuidad operativa: aunque Gemini tenga timeout o cuota, el sistema responde con analisis local.
+- Gobierno de datos: versionado de datasets para comparar cargas y mantener historial reciente.
 
-- APIs Astro en `src/pages/api/`:
-  - `upload.ts`: recibe CSV, valida extension/tamano y crea nueva version de dataset
-  - `metrics.ts`: devuelve resumen, insights y detalles del dataset activo
-  - `chat.ts`: responde preguntas usando Gemini + herramientas analiticas
-  - `health.ts`: estado de configuracion y disponibilidad de Gemini
-- Capa IA en `src/lib/ai/`:
-  - `gemini.ts`: cliente Gemini, prompt estrategico y fallback local
-  - `tools.ts`: seleccion y ejecucion de tools segun la pregunta
-- Capa datos en `src/lib/data/`:
-  - `loader.ts`, `metrics.ts`, `insights.ts`, `navigator.ts`
-- Estado de datasets en `src/lib/store/sessionStore.ts`
+## Para quien es este producto
 
-## Flujo funcional actual
+- Equipos de Growth y Performance Marketing.
+- Product Managers que optimizan funnels digitales.
+- Equipos de CRO y analitica digital.
+- Lideres de negocio que necesitan una lectura ejecutiva, no solo tablas.
 
-1. La pantalla inicial muestra solo carga de CSV y chat.
-2. No se activa ningun dataset por defecto al arrancar.
-3. Tras una carga exitosa, se habilita el workspace de datos procesados (Resumen, Insights, Tablas).
-4. El chat usa el contexto del dataset activo cuando existe.
-5. Si Gemini falla (timeout/cuota/proveedor), se entrega una respuesta local de fallback basada en metricas.
+## Como interactua el usuario con el programa
 
-## Persistencia de datos
+### 1. Inicio simple, sin friccion
 
-- Entrada de ejemplo en raiz:
-  - `1_Data_Recordings.csv`
-  - `2_Data_Metrics.csv`
-- Versiones procesadas y manifiesto:
-  - `data/runtime/datasets/manifest.json`
-  - `data/runtime/datasets/*.json`
-- Limpieza automatica por limite de versiones (`MAX_DATASET_VERSIONS`).
+Al abrir la app, el usuario ve solo dos acciones principales:
 
-## Variables de entorno
+- Cargar archivo CSV.
+- Preguntar al chat.
 
-Archivo `.env` (raiz):
+No se muestra un dataset por defecto. Esto evita tomar decisiones con datos antiguos por error.
+
+### 2. Carga y procesamiento
+
+El usuario sube su CSV de eventos y el sistema:
+
+- Valida formato y tamano.
+- Crea una nueva version de dataset.
+- Activa el dataset para el analisis actual.
+
+Cuando termina, se habilita automaticamente el workspace de datos procesados.
+
+### 3. Exploracion en workspace analitico
+
+El usuario navega tres vistas principales:
+
+- Resumen: lectura ejecutiva de estado general.
+- Insights: hallazgos con foco en oportunidad y riesgo.
+- Tablas: detalle para analistas y validacion de hallazgos.
+
+### 4. Conversacion con copiloto
+
+El chat permite preguntas abiertas de negocio y devuelve respuestas estructuradas con:
+
+- Dato clave.
+- Interpretacion del comportamiento.
+- Accion recomendada.
+
+Ejemplos de preguntas:
+
+- Que paginas tienen mas trafico pero peor salida?
+- Donde enfoco presupuesto para aumentar conversion?
+- Que friccion se observa en el recorrido antes de pricing o demo?
+
+## Flujos funcionales internos
+
+### Flujo A: Ingestion y versionado
+
+1. Upload de CSV.
+2. Parseo y normalizacion de datos.
+3. Persistencia en version nueva.
+4. Actualizacion de manifiesto de datasets.
+5. Activacion del dataset para metricas y chat.
+
+Resultado: trazabilidad y control de cambios en cada carga.
+
+### Flujo B: Motor de metricas
+
+1. Lectura del dataset activo.
+2. Calculo de KPIs y agregaciones.
+3. Identificacion de patrones e insights.
+4. Entrega en endpoints para dashboard y chat.
+
+Resultado: visibilidad de comportamiento y puntos de palanca para decisiones.
+
+### Flujo C: Decision Intelligence con IA
+
+1. El usuario pregunta en lenguaje natural.
+2. El sistema selecciona herramientas analiticas segun la pregunta.
+3. Se construye contexto con dataset activo y metricas relevantes.
+4. Gemini genera respuesta orientada a accion.
+5. Si Gemini falla, se aplica fallback local para no interrumpir el analisis.
+
+Resultado: continuidad de consulta aun con incidencias del proveedor.
+
+## Que datos y metricas muestra para tomar decisiones
+
+### KPIs operativos principales
+
+- Top Pages: identifica donde se concentra el trafico.
+- Exit Rate: detecta paginas con abandono alto.
+- Flujos frecuentes: muestra rutas reales de navegacion.
+- Interaccion promedio: evalua profundidad de engagement.
+- Conversion Intent: aproxima intencion de conversion.
+
+### Insights de negocio
+
+- Paginas fantasma: trafico sin progresion clara.
+- Sesiones de alta intencion: comportamiento cercano a conversion.
+- Caida de embudo: puntos del recorrido donde se rompe el avance.
+
+### Como convertir metricas en decisiones
+
+- Top Pages alto + Exit alto: optimizar mensaje, CTA y performance en esas paginas.
+- Flujo frecuente con corte temprano: redisenar secuencia o reducir friccion del paso intermedio.
+- Conversion Intent bajo en trafico calificado: ajustar oferta, formulario o prueba social.
+- Paginas fantasma recurrentes: simplificar arquitectura de contenido y enlaces internos.
+
+## Mapa rapido de decision para equipos de marketing
+
+- Si buscas volumen: prioriza paginas top con mejor retencion.
+- Si buscas eficiencia: ataca primero las paginas con mayor salida y trafico.
+- Si buscas conversion: enfoca experimentos en pasos previos a pricing, demo o checkout.
+- Si buscas rentabilidad: cruza hallazgos del chat con costo por canal y tasa de avance.
+
+## Estado de salud IA y continuidad
+
+El endpoint de salud informa si Gemini esta listo y diferencia entre:
+
+- Error de autenticacion o permisos.
+- Timeout del proveedor.
+- Cuota o rate limit excedido.
+- Proveedor no alcanzable.
+
+Incluso en estados no listos, el producto mantiene respuestas de fallback para no detener la operacion.
+
+## Arquitectura tecnica resumida
+
+- Frontend Astro con dashboard modular en public/js/dashboard.
+- API routes en src/pages/api para upload, metricas, chat y health.
+- Capa IA en src/lib/ai con orquestacion de tools y respuesta estructurada.
+- Capa de datos en src/lib/data para parseo, metricas e insights.
+- Store en src/lib/store/sessionStore para versionado y dataset activo.
+
+## Instalacion y puesta en marcha
+
+### Requisitos
+
+- Node.js 22+
+- npm
+
+### Configuracion
+
+1. Instala dependencias:
+
+```bash
+npm install
+```
+
+2. Configura variables en archivo .env:
 
 ```env
 GEMINI_API_KEY=AIza...
@@ -62,92 +172,32 @@ GEMINI_MAX_RETRIES=2
 MAX_DATASET_VERSIONS=10
 ```
 
-Notas:
-- La lectura de configuracion prioriza `.env` para reflejar cambios recientes de API key.
-- `health.ts` invalida cache del probe si detecta cambio de API key.
-
-## Endpoints principales
-
-- `GET /api/health`
-  - Estado rapido de configuracion Gemini.
-- `GET /api/health?deep=1`
-  - Probe real al proveedor Gemini.
-- `POST /api/upload`
-  - Carga y procesa CSV.
-- `GET /api/metrics`
-  - Resumen del dataset activo.
-- `POST /api/chat`
-  - Respuesta de copiloto con IA/fallback.
-
-## Estados de salud Gemini
-
-`/api/health` puede retornar:
-
-- `missing_key`
-- `invalid_key_format`
-- `ready`
-- `provider_auth_error`
-- `provider_timeout`
-- `provider_quota_exceeded`
-- `provider_unreachable`
-
-## Desarrollo local
-
-### Requisitos
-
-- Node.js 22+
-- npm
-
-### Instalar dependencias
-
-```bash
-npm install
-```
-
-### Ejecutar en desarrollo
+3. Ejecuta en desarrollo:
 
 ```bash
 npm run dev
 ```
 
-### Build de produccion
+### Comandos utiles
 
-```bash
-npm run build
-```
+- npm run dev
+- npm run build
+- npm run preview
+- npm run generate:sample
 
-### Preview local
+## FAQ para operacion comercial
 
-```bash
-npm run preview
-```
+### Cambie API key y veo sin cuota
 
-## Solucion de problemas
+Si la app indica provider_quota_exceeded con key configurada y formato valido, la lectura de clave funciona. El limite proviene de la cuenta o proyecto asociado a esa clave en Google AI.
 
-### Cambie la API key y sigue mostrando cuota
+### El workspace de datos procesados no aparece
 
-1. Verifica que el valor nuevo este en `.env` y tenga formato `AIza...`.
-2. Ejecuta `GET /api/health?deep=1` para forzar probe sin cache temporal.
-3. Si retorna `provider_quota_exceeded`, la restriccion viene del proyecto/cuenta de Google AI usada por esa key.
-4. Si retorna `provider_auth_error`, revisa permisos/API habilitada en Google AI Studio.
+Se habilita cuando hay una carga CSV valida y activa. Si no hay dataset activo, la app evita mostrar analitica para no inducir decisiones con datos inexistentes.
 
-### El workspace de datos no aparece
+## Roadmap recomendado
 
-- Confirma que la carga CSV termino correctamente.
-- Revisa `GET /api/metrics`; si responde `DATASET_REQUIRED`, aun no hay dataset activo.
-
-## Scripts disponibles
-
-- `npm run dev`
-- `npm run build`
-- `npm run preview`
-- `npm run generate:sample`
-
-## Estado del producto
-
-El proyecto esta orientado a demo de hackathon con arquitectura modular y puntos de extension claros para:
-
-- Autenticacion por usuarios
-- Persistencia en base de datos
-- Historial avanzado de conversaciones
-- Paneles de observabilidad y costos de IA
+- Segmentacion por canal de adquisicion y cohortes.
+- Priorizacion automatica de backlog de experimentos.
+- Integracion con BI y fuentes en tiempo real.
+- Alertas proactivas sobre caidas de conversion.
