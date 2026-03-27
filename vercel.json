@@ -1,0 +1,7 @@
+{
+  "api": {
+    "bodyParser": {
+      "sizeLimit": "30mb"
+    }
+  }
+}
